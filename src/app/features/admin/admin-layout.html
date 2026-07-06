@@ -1,0 +1,65 @@
+<div class="admin" [class.admin--collapsed]="!menuAbierto">
+
+  <!-- SIDEBAR -->
+  <aside class="admin__sidebar">
+
+    <div class="admin__brand">
+      <span class="admin__brand-name">Dental System</span>
+    </div>
+
+    <nav class="admin__nav">
+
+      <a class="admin__nav-item" routerLink="dashboard" routerLinkActive="admin__nav-item--active">
+        <span class="admin__nav-label">Dashboard</span>
+      </a>
+      <a class="admin__nav-item" routerLink="odontologos" routerLinkActive="admin__nav-item--active">
+        <span class="admin__nav-label">Odontologos</span>
+      </a>
+
+      <a class="admin__nav-item" routerLink="pacientes" routerLinkActive="admin__nav-item--active">
+        <span class="admin__nav-label">Pacientes</span>
+      </a>
+
+      <a class="admin__nav-item" routerLink="citas" routerLinkActive="admin__nav-item--active">
+        <span class="admin__nav-label">Citas - Agenda</span>
+      </a>
+
+       <a class="admin__nav-item" routerLink="servicios" routerLinkActive="admin__nav-item--active">
+        <span class="admin__nav-label">Servicios</span>
+      </a>
+
+       <a class="admin__nav-item" routerLink="facturacion" routerLinkActive="admin__nav-item--active">
+        <span class="admin__nav-label">Facturación</span>
+      </a>
+       <a class="admin__nav-item" routerLink="reportes" routerLinkActive="admin__nav-item--active">
+        <span class="admin__nav-label">Reportes</span>
+      </a>
+      <a class="admin__nav-item" routerLink="configuracion" routerLinkActive="admin__nav-item--active">
+        <span class="admin__nav-label">Configuración</span>
+      </a>
+
+    </nav>
+
+    <div class="admin__sidebar-footer">
+      <button class="admin__logout" (click)="cerrarSesion()">
+        <span>🚪</span> Cerrar sesión
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="admin__main">
+
+    <header class="admin__topbar">
+      <button class="admin__toggle" (click)="toggleMenu()">☰</button>
+      <span class="admin__user">{{ nombreUsuario }}</span>
+    </header>
+
+    <main class="admin__content">
+      <router-outlet />
+    </main>
+
+  </div>
+
+</div>

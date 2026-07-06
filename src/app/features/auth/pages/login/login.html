@@ -1,0 +1,87 @@
+<section class="auth-login" aria-labelledby="auth-login-title">
+  <form class="auth-login__card" (ngSubmit)="iniciarSesion()">
+    <div class="auth-login__accent"></div>
+
+    <div class="auth-login__body">
+      <span class="auth-login__badge"> Consultorio Dental </span>
+
+      <header class="auth-login__header">
+        <h1 class="auth-login__title" id="auth-login-title">Dental System</h1>
+        <p class="auth-login__subtitle">Ingresa tus credenciales para continuar</p>
+      </header>
+
+      <div class="auth-login__divider"></div>
+
+      <fieldset class="auth-login__fields">
+        <!-- CORREO -->
+        <label class="auth-login__field">
+          <span class="auth-login__label">Correo electrónico</span>
+
+          <div class="auth-login__input-wrap">
+            <span class="auth-login__icon">✉</span>
+
+            <input
+              class="auth-login__input"
+              type="email"
+              name="correo"
+              [(ngModel)]="correo"
+              placeholder="correo@ejemplo.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+        </label>
+
+        <!-- CONTRASEÑA -->
+        <label class="auth-login__field">
+          <span class="auth-login__label">Contraseña</span>
+
+          <div class="auth-login__input-wrap">
+            <svg
+              class="auth-login__icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+
+            <input
+              class="auth-login__input"
+              type="password"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+        </label>
+      </fieldset>
+
+      <!-- BOTÓN -->
+      <button class="auth-login__button" type="submit">Ingresar →</button>
+
+      
+      <p
+        class="auth-login__message"
+        *ngIf="mensaje"
+        [ngClass]="{
+          'auth-login__message--success': !esError,
+          'auth-login__message--error': esError,
+        }"
+      >
+        {{ mensaje }}
+      </p>
+
+      <p class="auth-login__footer">© 2026 Dental System · Todos los derechos reservados</p>
+    </div>
+  </form>
+</section>

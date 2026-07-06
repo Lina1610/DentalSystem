@@ -1,0 +1,8 @@
+// -- Estilos comunes en src/styles/components/_list-page.scss --
+// Todos los estilos de tabla, breadcrumb, stats, toolbar y paginaci�n est�n ah�.
+
+// -- Pacientes: btn-primary-lg usa verde (override) --------
+.btn-primary-lg {
+  background: #16a34a;
+  &:hover { background: #15803d; }
+}

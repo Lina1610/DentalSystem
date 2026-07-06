@@ -1,0 +1,82 @@
+<div class="modal-overlay">
+	<div class="modal-card">
+		<div class="modal-header">
+			<h3 class="modal-title">Editar Odontologo</h3>
+			<button type="button" class="modal-close" aria-label="Cerrar">x</button>
+		</div>
+
+		<div class="modal-body">
+			<p class="section-label">Datos personales</p>
+			<div class="form-grid">
+				<div class="form-group">
+					<label for="nombres">Nombres</label>
+					<input id="nombres" type="text" />
+				</div>
+				<div class="form-group">
+					<label for="apellidos">Apellidos</label>
+					<input id="apellidos" type="text" />
+				</div>
+				<div class="form-group">
+					<label for="documento">Documento</label>
+					<input id="documento" type="text" />
+				</div>
+				<div class="form-group">
+					<label for="telefono">Telefono</label>
+					<input id="telefono" type="tel" />
+				</div>
+				<div class="form-group form-group--full">
+					<label for="email">Email</label>
+					<input id="email" type="email" />
+				</div>
+			</div>
+
+			<p class="section-label">Acceso del sistema</p>
+			<div class="form-grid">
+				<div class="form-group">
+					<label for="username">Usuario</label>
+					<input id="username" type="text" />
+				</div>
+				<div class="form-group">
+					<label for="password">Nueva contrasena</label>
+					<input id="password" type="password" />
+				</div>
+			</div>
+
+			<p class="section-label">Datos profesionales</p>
+			<div class="form-grid">
+				<div class="form-group">
+					<label for="tarjeta">Tarjeta profesional</label>
+					<input id="tarjeta" type="text" />
+				</div>
+				<div class="form-group">
+					<label for="experiencia">Experiencia (anios)</label>
+					<input id="experiencia" type="number" min="0" />
+				</div>
+				<div class="form-group">
+					<label for="especialidad">Especialidad</label>
+					<select id="especialidad">
+						<option value="">Seleccionar...</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="consultorio">Consultorio</label>
+					<select id="consultorio">
+						<option value="">Seleccionar...</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="estado">Estado</label>
+					<select id="estado">
+						<option value="ACTIVO">Activo</option>
+						<option value="INACTIVO">Inactivo</option>
+					</select>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal-footer">
+			<button type="button" class="btn-cancel">Cancelar</button>
+			<button type="button" class="btn-save">Guardar cambios</button>
+		</div>
+	</div>
+</div>

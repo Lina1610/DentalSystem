@@ -1,0 +1,43 @@
+<div class="overlay" *ngIf="paciente" (click)="cerrar.emit()">
+  <div class="card" (click)="$event.stopPropagation()">
+
+    <div class="card-header">
+      <div class="avatar">{{ paciente.nombres[0] }}{{ paciente.apellidos[0] }}</div>
+      <div>
+        <h2 class="nombre">{{ paciente.nombres }} {{ paciente.apellidos }}</h2>
+        <span class="badge" [class.activo]="paciente.estado === 'ACTIVO'"
+                            [class.inactivo]="paciente.estado !== 'ACTIVO'">
+          {{ paciente.estado }}
+        </span>
+      </div>
+      <button class="btn-close" (click)="cerrar.emit()">✕</button>
+    </div>
+
+    <div class="card-body">
+      <section class="section">
+        <h4 class="section-title">Información personal</h4>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="label">Documento</span><span>{{ paciente.documento }}</span></div>
+          <div class="detail-item"><span class="label">Fecha de nac.</span><span>{{ paciente.fecha_nacimiento | date:'dd/MM/yyyy' }}</span></div>
+          <div class="detail-item"><span class="label">Género</span><span>{{ paciente.genero }}</span></div>
+          <div class="detail-item"><span class="label">Teléfono</span><span>{{ paciente.telefono }}</span></div>
+          <div class="detail-item"><span class="label">Email</span><span>{{ paciente.email || '—' }}</span></div>
+          <div class="detail-item"><span class="label">Dirección</span><span>{{ paciente.direccion || '—' }}</span></div>
+        </div>
+      </section>
+
+      <section class="section" *ngIf="paciente.alergias || paciente.observaciones">
+        <h4 class="section-title">Notas clínicas</h4>
+        <div class="detail-item detail-item--block" *ngIf="paciente.alergias">
+          <span class="label">Alergias</span>
+          <p>{{ paciente.alergias }}</p>
+        </div>
+        <div class="detail-item detail-item--block" *ngIf="paciente.observaciones">
+          <span class="label">Observaciones</span>
+          <p>{{ paciente.observaciones }}</p>
+        </div>
+      </section>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,67 @@
+<div class="modal-overlay" *ngIf="mostrar && paciente" (click)="cerrar.emit()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3 class="modal-title">Editar Paciente</h3>
+      <button class="modal-close" (click)="cerrar.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombres</label>
+          <input type="text" [(ngModel)]="paciente.nombres" />
+        </div>
+        <div class="form-group">
+          <label>Apellidos</label>
+          <input type="text" [(ngModel)]="paciente.apellidos" />
+        </div>
+        <div class="form-group">
+          <label>Documento</label>
+          <input type="text" [(ngModel)]="paciente.documento" />
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="paciente.telefono" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="paciente.email" />
+        </div>
+        <div class="form-group">
+          <label>Fecha de Nacimiento</label>
+          <input type="date" [(ngModel)]="paciente.fecha_nacimiento" />
+        </div>
+        <div class="form-group">
+          <label>Género</label>
+          <select [(ngModel)]="paciente.genero">
+            <option value="MASCULINO">Masculino</option>
+            <option value="FEMENINO">Femenino</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Dirección</label>
+          <input type="text" [(ngModel)]="paciente.direccion" />
+        </div>
+        <div class="form-group form-group--full">
+          <label>Alergias</label>
+          <textarea [(ngModel)]="paciente.alergias" rows="2"></textarea>
+        </div>
+        <div class="form-group form-group--full">
+          <label>Observaciones</label>
+          <textarea [(ngModel)]="paciente.observaciones" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+      <button class="btn-cancel" (click)="onCerrar()">Cancelar</button>
+      <button class="btn-save" (click)="onGuardar()" [disabled]="guardando">
+        {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+
+  </div>
+</div>
