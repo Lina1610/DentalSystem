@@ -4,7 +4,7 @@
 // =========================================================
 
 const { body, param } = require('express-validator');
-const validar = require('../middlewares/validation.middleware');
+const validar = require('../validation.middleware');
 
 // ---------------------------------------------------------
 // Guard: Crear paciente

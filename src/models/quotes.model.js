@@ -36,6 +36,7 @@ Cita.findAll = async ({
      ${where}`,
     params
   );
+  
   const [data] = await pool.query(
     `SELECT *
      FROM cita

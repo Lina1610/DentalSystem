@@ -2,7 +2,7 @@
 'use strict';
 
 const { body, param } = require('express-validator');
-const validar = require('../middlewares/validation.middleware');
+const validar = require('../validation.middleware');
 
 const guardsCrear = [
   // ── Datos personales (tabla usuario) ──────────────────

@@ -7,7 +7,7 @@ const {
   guardsActualizar,
   guardsId,
   guardsDocumento,
-} = require('../middlewares/dentista.guard');
+} = require('../middlewares/validation/dentista.guard');
 
 router.get(
   '/',

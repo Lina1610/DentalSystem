@@ -12,7 +12,7 @@ const {
   guardsActualizar,
   guardsId,
   guardsDocumento,
-} = require('../middlewares/paciente.guard');
+} = require('../middlewares/validation/paciente.guard');
 
 // const { verificarToken } = require('../middlewares/auth.middleware');
 // const { soloRoles } = require('../middlewares/roles.middleware');

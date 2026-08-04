@@ -24,6 +24,7 @@ app.use('/api', require('./routes/roles.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/pacientes', require('./routes/patient.routes'));
 app.use('/api/odontologos', require('./routes/dentist.routes'));
+app.use('/api/quotes', require('./routes/quotes.routes'));
 
 app.get('/', (req, res) => {
   res.send('API funcionando');
