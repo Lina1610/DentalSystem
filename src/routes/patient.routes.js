@@ -1,8 +1,3 @@
-// =========================================================
-// ROUTES: paciente.routes.js
-// Conecta guards + controller
-// =========================================================
-
 const express = require('express');
 const router = express.Router();
 
