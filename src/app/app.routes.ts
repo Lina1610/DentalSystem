@@ -11,37 +11,37 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/pages/login/login').then((m) => m.Login),
+    loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
     path: 'register',
-    loadComponent: () => import('./features/auth/pages/register/register').then((m) => m.Register),
+    loadComponent: () => import('./pages/usuarios/register').then((m) => m.Register),
   },
   {
     path: 'admin',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/admin/admin-layout').then((m) => m.AdminLayout),
+    loadComponent: () => import('./layouts/admin-layout/admin-layout').then((m) => m.AdminLayout),
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', loadComponent: () => import('./features/admin/pages/dashboard/dashboard').then((m) => m.DashboardPage) },
+      { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardPage) },
       {
         path: 'pacientes',
         resolve: { pacientesData: pacientesResolver },
-        loadComponent: () => import('./features/patients/pages/lista-pacientes/lista-pacientes').then((m) => m.ListaPacientesComponent),
+        loadComponent: () => import('./pages/pacientes/lista-pacientes/lista-pacientes').then((m) => m.ListaPacientesComponent),
       },
       {
         path: 'pacientes/:id',
         resolve: { pacienteData: pacienteDetalleResolver },
-        loadComponent: () => import('./features/patients/pages/lista-pacientes/lista-pacientes').then((m) => m.ListaPacientesComponent),
+        loadComponent: () => import('./pages/pacientes/lista-pacientes/lista-pacientes').then((m) => m.ListaPacientesComponent),
       },
       {
         path: 'odontologos',
         runGuardsAndResolvers: 'paramsOrQueryParamsChange',
         resolve: { odontologosData: odontologosResolver },
-        loadComponent: () => import('./features/odontologos/pages/lista-odontologos/lista-odontologos').then((m) => m.ListaOdontologosComponent),
+        loadComponent: () => import('./pages/odontologos/lista-odontologos/lista-odontologos').then((m) => m.ListaOdontologosComponent),
       },
-      { path: 'citas', loadComponent: () => import('./features/admin/pages/citas/citas').then((m) => m.CitasPage) },
-      { path: 'agenda', loadComponent: () => import('./features/admin/pages/agenda/agenda').then((m) => m.AgendaPage) },
+      { path: 'citas', loadComponent: () => import('./pages/citas/citas').then((m) => m.CitasPage) },
+      { path: 'agenda', loadComponent: () => import('./pages/agendas/agenda').then((m) => m.AgendaPage) },
     ],
   },
 ];

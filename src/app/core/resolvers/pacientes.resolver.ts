@@ -2,8 +2,8 @@ import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
 import { EMPTY, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { PacienteService, PacientesResponse } from '../../features/patients/services/patient.service';
-import { Paciente } from '../../features/patients/interfaces/patient.interface';
+import { PacienteService, PacientesResponse } from '../../pages/pacientes/services/patient.service';
+import { Paciente } from '../../pages/pacientes/interfaces/patient.interface';
 import { environment } from '../../../environments/environment';
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const PAGINA_DEFAULT  = 1;

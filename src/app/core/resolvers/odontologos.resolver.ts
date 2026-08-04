@@ -2,8 +2,8 @@ import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
 import { EMPTY, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { OdontologoService, OdontologosResponse } from '../../features/odontologos/services/odontologo.service';
-import { Odontologo } from '../../features/odontologos/interfaces/odontologo.interface';
+import { OdontologoService, OdontologosResponse } from '../../pages/odontologos/services/odontologo.service';
+import { Odontologo } from '../../pages/odontologos/interfaces/odontologo.interface';
 import { environment } from '../../../environments/environment';
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const PAGINA_DEFAULT  = 1;
