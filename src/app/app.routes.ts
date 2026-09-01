@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { pacienteDetalleResolver, pacientesResolver } from './core/resolvers/pacientes.resolver';
 import { odontologosResolver } from './core/resolvers/odontologos.resolver';
+import { citasResolver } from './core/resolvers/citas.resolver';
 
 export const routes: Routes = [
   {
@@ -40,8 +41,12 @@ export const routes: Routes = [
         resolve: { odontologosData: odontologosResolver },
         loadComponent: () => import('./pages/odontologos/lista-odontologos/lista-odontologos').then((m) => m.ListaOdontologosComponent),
       },
-      { path: 'citas', loadComponent: () => import('./pages/citas/citas').then((m) => m.CitasPage) },
-      { path: 'agenda', loadComponent: () => import('./pages/agendas/agenda').then((m) => m.AgendaPage) },
+      {
+        path: 'citas',
+        runGuardsAndResolvers: 'paramsOrQueryParamsChange',
+        resolve: { citasData: citasResolver },
+        loadComponent: () => import('./pages/citas/lista-citas/lista-citas').then((m) => m.ListaCitasComponent),
+      },
     ],
   },
 ];

@@ -83,7 +83,6 @@ export const pacienteDetalleResolver: ResolveFn<Paciente> = (route) => {
       }
     }),
     catchError((error: unknown) => {
-      // ✅ Si no existe o falla, redirige en vez de devolver null
       console.error('[pacienteDetalleResolver] Error al obtener paciente:', error);
       router.navigate(['/pacientes']);
       return EMPTY;

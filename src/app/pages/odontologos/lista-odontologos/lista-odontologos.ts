@@ -5,9 +5,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { OdontologoStore } from '../../store/odontologo.store';
-import { Odontologo } from '../../interfaces/odontologo.interface';
-import { CrearOdontologoModalComponent, NuevoOdontologo } from '../../components/modals/crear-odontologo-modal/crear-odontologo-modal';
+import { OdontologoStore } from '../store/odontologo.store';
+import { Odontologo } from '../interfaces/odontologo.interface';
+import { CrearOdontologoModalComponent, NuevoOdontologo } from '../components/modals/crear-odontologo-modal/crear-odontologo-modal';
 
 @Component({
   selector: 'app-lista-odontologos',

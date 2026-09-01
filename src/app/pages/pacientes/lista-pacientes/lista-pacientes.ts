@@ -5,11 +5,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { PacienteService } from '../../services/patient.service';
-import { Paciente } from '../../interfaces/patient.interface';
-import { DetallePacienteComponent } from '../../components/sections/detalle-paciente/detalle-paciente';
-import { EditarPacienteModalComponent } from '../../components/modals/editar-paciente-modal/editar-paciente-modal';
-import { CrearPacienteModalComponent, NuevoPaciente } from '../../components/modals/crear-paciente-modal/crear-paciente-modal';
+import { PacienteService } from '../services/patient.service';
+import { Paciente } from '../interfaces/patient.interface';
+import { DetallePacienteComponent } from '../components/sections/detalle-paciente/detalle-paciente';
+import { EditarPacienteModalComponent } from '../components/modals/editar-paciente-modal/editar-paciente-modal';
+import { CrearPacienteModalComponent, NuevoPaciente } from '../components/modals/crear-paciente-modal/crear-paciente-modal';
 
 @Component({
   selector: 'app-lista-pacientes',
