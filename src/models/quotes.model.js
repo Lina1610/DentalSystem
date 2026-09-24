@@ -17,31 +17,41 @@ Cita.findAll = async ({
     filtros: {
       busqueda,
       exactos: {
-        ...(estado ? { estado } : {}),
-        ...(id_paciente ? { id_paciente } : {}),
-        ...(id_odontologo ? { id_odontologo } : {}),
+        ...(estado ? { 'cita.estado': estado } : {}),
+        ...(id_paciente ? { 'cita.id_paciente': id_paciente } : {}),
+        ...(id_odontologo ? { 'cita.id_odontologo': id_odontologo } : {}),
       },
     },
-    searchableFields: ['motivo_consulta', 'observaciones'],
+    searchableFields: ['pac.documento'],
   });
 
   const [[stats]] = await pool.query(
     `SELECT
-       COUNT(*)                        AS total,
-       SUM(estado = 'PENDIENTE')       AS pendientes,
-       SUM(estado = 'CONFIRMADA')      AS confirmadas,
-       SUM(estado = 'CANCELADA')       AS canceladas,
-       SUM(estado = 'FINALIZADA')      AS finalizadas
+       COUNT(*)                             AS total,
+       SUM(cita.estado = 'PENDIENTE')       AS pendientes,
+       SUM(cita.estado = 'CONFIRMADA')      AS confirmadas,
+       SUM(cita.estado = 'CANCELADA')       AS canceladas,
+       SUM(cita.estado = 'FINALIZADA')      AS finalizadas
      FROM cita
+     JOIN paciente pac ON pac.id_paciente = cita.id_paciente
      ${where}`,
     params
   );
-  
+
   const [data] = await pool.query(
-    `SELECT *
+    `SELECT
+       cita.*,
+       pac.documento                           AS paciente_documento,
+       CONCAT(pac.nombres, ' ', pac.apellidos) AS paciente_nombre,
+       CONCAT(usr.nombres, ' ', usr.apellidos) AS odontologo_nombre,
+       srv.nombre                              AS servicio_nombre
      FROM cita
+     JOIN paciente   pac ON pac.id_paciente   = cita.id_paciente
+     JOIN odontologo odo ON odo.id_odontologo = cita.id_odontologo
+     JOIN usuario    usr ON usr.id_usuario    = odo.id_usuario
+     JOIN servicio   srv ON srv.id_servicio   = cita.id_servicio
      ${where}
-     ORDER BY id_cita ASC
+     ORDER BY cita.id_cita ASC
      LIMIT ? OFFSET ?`,
     [...params, Number(limite), Number(offset)]
   );
