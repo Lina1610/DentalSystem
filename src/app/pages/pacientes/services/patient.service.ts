@@ -17,7 +17,7 @@ export class PacienteService {
 
   private http = inject(HttpClient);
 
-  private API = 'http://localhost:3001/api/pacientes';
+  private API = 'http://localhost:3002/api/pacientes';
 
   // Obtener paginado (con búsqueda, filtro de estado y página)
   obtenerPacientes(opts: { busqueda?: string; pagina?: number; limite?: number; estado?: string } = {}): Observable<PacientesResponse> {

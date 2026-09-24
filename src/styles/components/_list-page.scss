@@ -279,6 +279,39 @@
   &.inactivo { background: #fff7ed; color: #c2410c; }
 }
 
+// ── Estado select (interactivo — cambia el estado de una cita) ──
+.estado-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.3rem 1.6rem 0.3rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  outline: none;
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+  background-size: 10px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");
+  transition: opacity 0.12s;
+
+  &:hover  { opacity: 0.85; }
+  &:focus  { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+
+  &.pendiente  { background-color: #fff7ed; color: #c2410c; }
+  &.confirmada { background-color: #dcfce7; color: #15803d; }
+  &.cancelada  { background-color: #fee2e2; color: #dc2626; }
+  &.finalizada { background-color: #e0e7ff; color: #4338ca; }
+
+  &.disponible    { background-color: #dcfce7; color: #15803d; }
+  &.ocupado       { background-color: #fff7ed; color: #c2410c; }
+  &.bloqueado     { background-color: #fee2e2; color: #dc2626; }
+  &.no-disponible { background-color: #f1f5f9; color: #475569; }
+}
+
 // ── Action buttons ────────────────────────────────────────
 .col-actions { width: 1%; white-space: nowrap; }
 .btn-group {

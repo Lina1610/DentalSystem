@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { CitaService } from '../services/cita.service';
-import { Cita } from '../interfaces/cita.interface';
+import { Cita, EstadoCita } from '../interfaces/cita.interface';
 
 @Injectable({ providedIn: 'root' })
 export class CitaStore {
@@ -51,40 +51,83 @@ export class CitaStore {
     });
   }
 
-  cambiarEstado(id: number): void {
-    const idx = this._odontologos().findIndex(o => o.id_odontologo === id);
-    if (idx === -1) return;
-
-    const estadoAnterior = this._odontologos()[idx].estado;
-    const nuevoEstado    = estadoAnterior === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
-
-    // Actualización optimista
-    this._odontologos.update(list =>
-      list.map((o, i) => i === idx ? { ...o, estado: nuevoEstado } : o)
-    );
-    this._activos.update(n   => n + (nuevoEstado === 'ACTIVO'   ? 1 : -1));
-    this._inactivos.update(n => n + (nuevoEstado === 'INACTIVO' ? 1 : -1));
-
-    this.service.cambiarEstado(id).subscribe({
-      error: () => {
-        // Revertir si falla
-        this._odontologos.update(list =>
-          list.map((o, i) => i === idx ? { ...o, estado: estadoAnterior } : o)
-        );
-        this._activos.update(n   => n + (estadoAnterior === 'ACTIVO'   ? 1 : -1));
-        this._inactivos.update(n => n + (estadoAnterior === 'INACTIVO' ? 1 : -1));
-      },
-    });
+private contadorPorEstado(estado: Cita['estado']) {
+  switch (estado) {
+    case 'PENDIENTE':  return this._pendientes;
+    case 'CONFIRMADA': return this._confirmadas;
+    case 'CANCELADA':  return this._canceladas;
+    case 'FINALIZADA': return this._finalizadas;
+    default:           return undefined;
   }
+}
 
-  crear(data: Odontologo, onSuccess: () => void, onError: (msg: string) => void): void {
-    this.service.crearOdontologo(data).subscribe({
+private aplicarEstado(idx: number, estado: Cita['estado']): void {
+  const estadoAnterior = this._citas()[idx].estado;
+  if (estadoAnterior === estado) return;
+
+  this._citas.update(list =>
+    list.map((c, i) => i === idx ? { ...c, estado } : c)
+  );
+
+  this.contadorPorEstado(estadoAnterior)?.update(n => n - 1);
+  this.contadorPorEstado(estado)?.update(n => n + 1);
+}
+
+cambiarEstado(id: number, nuevoEstado: EstadoCita): void {
+  const idx = this._citas().findIndex(c => c.id_cita === id);
+  if (idx === -1) return;
+
+  const estadoAnterior = this._citas()[idx].estado;
+  if (!estadoAnterior || estadoAnterior === nuevoEstado) return;
+
+  // Actualización optimista
+  this.aplicarEstado(idx, nuevoEstado);
+
+  this.service.cambiarEstado(id, nuevoEstado).subscribe({
+    error: () => {
+      // Revertir si falla
+      this.aplicarEstado(idx, estadoAnterior);
+    },
+  });
+}
+
+  crear(data: Cita, onSuccess: () => void, onError: (msg: string) => void): void {
+    this.service.crearCita(data).subscribe({
       next: () => {
         this._total.update(n => n + 1);
         onSuccess();
       },
       error: (err) => {
         onError(err?.error?.message ?? (err?.error?.errores?.[0]?.mensaje) ?? 'Error al registrar.');
+      },
+    });
+  }
+
+  actualizar(id: number, data: Partial<Cita>, onSuccess: () => void, onError: (msg: string) => void): void {
+    this.service.actualizarCita(id, data).subscribe({
+      next: (citaActualizada) => {
+        this._citas.update(list =>
+          list.map(c => c.id_cita === id ? { ...c, ...citaActualizada } : c)
+        );
+        onSuccess();
+      },
+      error: (err) => {
+        onError(err?.error?.message ?? (err?.error?.errores?.[0]?.mensaje) ?? 'Error al actualizar.');
+      },
+    });
+  }
+
+  eliminar(id: number, observaciones: string | undefined, onSuccess: () => void, onError: (msg: string) => void): void {
+    const idx = this._citas().findIndex(c => c.id_cita === id);
+    if (idx === -1) return;
+
+    this.service.eliminarCita(id, observaciones).subscribe({
+      next: () => {
+        this.aplicarEstado(idx, 'CANCELADA');
+        onSuccess();
+      },
+      error: (err) => {
+        onError(err?.error?.message ?? 'Error al cancelar la cita.');
       },
     });
   }

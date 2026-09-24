@@ -35,7 +35,7 @@ export class Login {
       password: this.password
     };
 
-    this.http.post('http://localhost:3001/api/auth/login', body)
+    this.http.post('http://localhost:3002/api/auth/login', body)
       .subscribe({
         next: (response: any) => {
           this.esError = false;

@@ -15,7 +15,7 @@ export interface OdontologosResponse {
 })
 export class OdontologoService {
   private http = inject(HttpClient);
-  private API  = 'http://localhost:3001/api/odontologos';
+  private API  = 'http://localhost:3002/api/odontologos';
 
   // Obtener paginado (búsqueda, filtro estado, página)
   obtenerOdontologos(

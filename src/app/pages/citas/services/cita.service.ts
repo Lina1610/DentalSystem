@@ -20,7 +20,7 @@ export class CitaService {
 
   private http = inject(HttpClient);
 
-  private API = 'http://localhost:3001/api/quotes';
+  private API = 'http://localhost:3002/api/quotes';
 
   // Obtener paginado
   obtenerCitas(opts: {

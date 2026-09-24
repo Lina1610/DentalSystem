@@ -5,7 +5,7 @@ import { Login } from '../models/login.interface';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:3001/api/auth';
+  private apiUrl = 'http://localhost:3002/api/auth';
 
   constructor(private http: HttpClient) {}
 

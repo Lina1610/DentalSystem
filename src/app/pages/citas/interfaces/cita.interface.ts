@@ -1,3 +1,5 @@
+export type EstadoCita = 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'FINALIZADA';
+
 export interface Cita {
   id_cita?: number;
   id_paciente: number;
@@ -7,8 +9,12 @@ export interface Cita {
   fecha_inicio: string;
   fecha_fin: string;
   motivo_consulta?: string;
-  estado?: 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'FINALIZADA';
+  estado?: EstadoCita;
   observaciones?: string;
   fecha_creacion?: string;
   fecha_actualizacion?: string;
+  paciente_documento?: string;
+  paciente_nombre?: string;
+  odontologo_nombre?: string;
+  servicio_nombre?: string;
 }

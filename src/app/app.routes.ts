@@ -3,6 +3,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { pacienteDetalleResolver, pacientesResolver } from './core/resolvers/pacientes.resolver';
 import { odontologosResolver } from './core/resolvers/odontologos.resolver';
 import { citasResolver } from './core/resolvers/citas.resolver';
+import { agendaResolver } from './core/resolvers/agenda.resolver';
 
 export const routes: Routes = [
   {
@@ -46,6 +47,12 @@ export const routes: Routes = [
         runGuardsAndResolvers: 'paramsOrQueryParamsChange',
         resolve: { citasData: citasResolver },
         loadComponent: () => import('./pages/citas/lista-citas/lista-citas').then((m) => m.ListaCitasComponent),
+      },
+      {
+        path: 'agenda',
+        runGuardsAndResolvers: 'paramsOrQueryParamsChange',
+        resolve: { agendaData: agendaResolver },
+        loadComponent: () => import('./pages/agendas/lista-agendas/lista-agendas').then((m) => m.ListaAgendasComponent),
       },
     ],
   },
