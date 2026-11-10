@@ -1,59 +1,83 @@
-# App
+# Dental System — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.2.
+Panel administrativo de un consultorio odontológico: dashboard con indicadores, pacientes, odontólogos, servicios, agenda de horarios y citas.
 
-## Development server
+Necesita la API, que está en la rama [`api`](https://github.com/Lina1610/DentalSystem/tree/api) de este mismo repositorio. **Instala y arranca la API primero**: sus instrucciones crean también la base de datos.
 
-To start a local development server, run:
+**Tecnologías:** Angular 21 (componentes standalone, signals) · PrimeNG · SCSS
 
-```bash
-ng serve
-```
+---
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Requisitos
 
-## Code scaffolding
+- [Node.js](https://nodejs.org/) 20.19 o superior
+- La API corriendo en `http://localhost:3002`
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Instalación
 
 ```bash
-ng generate --help
+git clone -b app https://github.com/Lina1610/DentalSystem.git app
+cd app
+npm install
+npm start
 ```
 
-## Building
+Abre `http://localhost:4000` en el navegador.
 
-To build the project run:
+### Iniciar sesión
 
-```bash
-ng build
+| Correo | Contraseña |
+|---|---|
+| `admin@consultorio.com` | `admin123` |
+
+Por ahora solo los usuarios con rol **administrador** pueden entrar.
+
+## Problemas comunes
+
+**"No se pudo conectar con el servidor"**
+- Revisa que la API esté encendida: `http://localhost:3002` debe responder `API funcionando`.
+- Si la API está encendida, es CORS: la dirección donde abriste el frontend (por ejemplo `http://localhost:4000`) debe estar en `CORS_ORIGIN` del `.env` de la API. Después de cambiarlo, reinicia la API.
+
+**"Demasiados intentos de inicio de sesión"**
+- Se superó el límite de intentos fallidos. Espera 15 minutos o reinicia la API.
+
+---
+
+## Estructura
+
+```
+src/app/
+├── core/
+│   ├── guards/          # Protege las rutas de /admin (requiere sesión de administrador)
+│   └── interceptors/    # Agrega el token a cada petición; si expira, vuelve al login
+├── layouts/
+│   └── admin-layout/    # Menú lateral y estructura del panel
+├── pages/
+│   ├── login/
+│   ├── dashboard/
+│   ├── pacientes/
+│   ├── odontologos/
+│   ├── servicios/
+│   ├── agendas/
+│   └── citas/
+└── shared/utils/        # Funciones y tipos comunes a los listados
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Cada módulo de `pages/` sigue la misma organización:
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
+```
+citas/
+├── lista-citas/         # Pantalla principal (tabla, filtros, tarjetas de resumen)
+├── components/modals/   # Formularios de crear y editar
+├── services/            # Llamadas HTTP a la API
+├── store/               # Estado de la pantalla con signals
+└── interfaces/          # Tipos de datos
 ```
 
-## Running end-to-end tests
+## Comandos
 
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+| Comando | Qué hace |
+|---|---|
+| `npm start` | Servidor de desarrollo con recarga automática |
+| `npm run build` | Compila para producción en `dist/` |
+| `npm test` | Ejecuta las pruebas (Vitest) |
