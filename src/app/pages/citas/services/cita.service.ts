@@ -7,6 +7,7 @@ import { Cita } from '../interfaces/cita.interface';
 export interface CitasResponse {
   data: Cita[];
   total: number;
+  totalGeneral?: number;
   pendientes: number;
   confirmadas: number;
   canceladas: number;
@@ -30,6 +31,7 @@ export class CitaService {
     estado?: string;
     id_paciente?: number;
     id_odontologo?: number;
+    fecha?: string;
   } = {}): Observable<CitasResponse> {
 
     let params = new HttpParams();
@@ -40,6 +42,7 @@ export class CitaService {
     if (opts.estado)        params = params.set('estado', opts.estado);
     if (opts.id_paciente)   params = params.set('id_paciente', opts.id_paciente.toString());
     if (opts.id_odontologo) params = params.set('id_odontologo', opts.id_odontologo.toString());
+    if (opts.fecha)         params = params.set('fecha', opts.fecha);
 
     return this.http.get<CitasResponse>(this.API, { params });
   }

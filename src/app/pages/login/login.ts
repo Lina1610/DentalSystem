@@ -28,8 +28,6 @@ export class Login {
       this.esError = true;
       return;
     }
-
-    // 1. AJUSTE: Tu Backend desestructura { correo, password }. Debe decir 'correo' aquí.
     const body = {
       correo: this.correo,
       password: this.password
@@ -38,32 +36,28 @@ export class Login {
     this.http.post('http://localhost:3002/api/auth/login', body)
       .subscribe({
         next: (response: any) => {
-          this.esError = false;
-          
-          localStorage.setItem('token', response.token);
-          
-          // Obtener el rol del backend
-          const rol = response.rol;
+          if (response.rol !== 1) {
+            this.esError = true;
+            this.mensaje = 'Tu usuario aún no tiene acceso al sistema. Contacta al administrador.';
+            return;
+          }
 
+          this.esError = false;
+          localStorage.setItem('token', response.token);
           this.mensaje = 'Inicio de sesión correctamente';
 
           setTimeout(() => {
-            // 2. AJUSTE: Tu backend devuelve el id_rol de la BD (1 = ADMIN, 2 = ODONTOLOGO)
-            if (rol === 1) {
-              this.router.navigate(['/admin']);
-            } else {
-              this.router.navigate(['/dashboard']);
-            }
+            this.router.navigate(['/admin/dashboard']);
           }, 1500);
         },
         error: (error) => {
           this.esError = true;
-          
-          // Muestra el error real del backend ("Usuario no encontrado" / "Contraseña incorrecta")
-          if (error.error && error.error.message) {
+          if (error.status === 0) {
+            this.mensaje = 'No se pudo conectar con el servidor. Verifica que la API esté encendida.';
+          } else if (error.error && error.error.message) {
             this.mensaje = error.error.message;
           } else {
-            this.mensaje = 'Credenciales incorrectas';
+            this.mensaje = `Error inesperado del servidor (${error.status}).`;
           }
           console.error(error);
         }

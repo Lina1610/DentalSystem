@@ -35,6 +35,9 @@ export class CrearAgendaModalComponent implements OnInit, OnChanges {
   form: NuevoHorario = this.formVacio();
   errorLocal = '';
 
+  // Fecha de hoy en formato YYYY-MM-DD, para bloquear fechas pasadas en el date picker
+  readonly hoy = new Date().toLocaleDateString('sv-SE');
+
   ngOnInit(): void {
     this.odontologoService.obtenerOdontologos({ limite: 100, estado: 'ACTIVO' }).subscribe({
       next: (res) => { this.odontologos = res.data; },
@@ -46,6 +49,11 @@ export class CrearAgendaModalComponent implements OnInit, OnChanges {
       this.form = this.formVacio();
       this.errorLocal = '';
     }
+  }
+
+  private horaActual(): string {
+    const ahora = new Date();
+    return `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
   }
 
   private formVacio(): NuevoHorario {
@@ -69,12 +77,20 @@ export class CrearAgendaModalComponent implements OnInit, OnChanges {
       this.errorLocal = 'Selecciona una fecha';
       return;
     }
+    if (fecha < this.hoy) {
+      this.errorLocal = 'No puedes crear un horario en una fecha pasada';
+      return;
+    }
     if (!hora_inicio || !hora_fin) {
       this.errorLocal = 'Completa la hora de inicio y de fin';
       return;
     }
     if (hora_fin <= hora_inicio) {
       this.errorLocal = 'La hora de fin debe ser mayor que la hora de inicio';
+      return;
+    }
+    if (fecha === this.hoy && hora_inicio <= this.horaActual()) {
+      this.errorLocal = 'Esa hora ya pasó; elige un horario más adelante';
       return;
     }
 

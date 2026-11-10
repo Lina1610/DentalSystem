@@ -5,9 +5,14 @@ export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
   const token = localStorage.getItem('token');
 
+  // Cualquier token inválido, expirado o sin rol admin se descarta y se vuelve al login
+  const denegar = () => {
+    localStorage.removeItem('token');
+    return router.createUrlTree(['/login']);
+  };
+
   if (!token) {
-    router.navigate(['/login']);
-    return false;
+    return router.createUrlTree(['/login']);
   }
 
   try {
@@ -15,21 +20,16 @@ export const authGuard: CanActivateFn = () => {
 
     // Validar expiración
     if (payload.exp && payload.exp * 1000 < Date.now()) {
-      localStorage.removeItem('token');
-      router.navigate(['/login']);
-      return false;
+      return denegar();
     }
 
     // Validar rol admin (id_rol = 1)
     if (payload.rol !== 1) {
-      router.navigate(['/login']);
-      return false;
+      return denegar();
     }
 
     return true;
   } catch {
-    localStorage.removeItem('token');
-    router.navigate(['/login']);
-    return false;
+    return denegar();
   }
 };

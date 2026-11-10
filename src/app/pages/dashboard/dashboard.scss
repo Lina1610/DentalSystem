@@ -1,0 +1,173 @@
+@use 'styles/abstracts/variables' as *;
+
+// Breadcrumb, page-header y filter-tabs vienen de src/styles/components/_list-page.scss
+
+.page-header {
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+// ── Rango personalizado ─────────────────────────────────
+.rango {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: $color-surface;
+  border: 1px solid $color-border;
+}
+
+.rango__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+
+  input {
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid $color-border;
+    font: inherit;
+    font-weight: 400;
+    color: $color-text;
+  }
+}
+
+.rango__aplicar {
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  background: $color-primary;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: $color-primary-dark; }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.rango__error {
+  align-self: center;
+  font-size: 0.8rem;
+  color: #be123c;
+}
+
+// ── Indicadores ─────────────────────────────────────────
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+// ── Paneles ─────────────────────────────────────────────
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  padding: 1.1rem 1.25rem;
+  border-radius: 14px;
+  background: $color-surface;
+  border: 1px solid $color-border;
+
+  &--ancho { grid-column: 1 / -1; }
+}
+
+.panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panel__titulo {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: $color-text;
+}
+
+.panel__sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.panel__link {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $color-primary;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+// Recargando con datos previos: se atenúan en lugar de desaparecer
+.dash {
+  transition: opacity 0.2s;
+
+  &--recargando { opacity: 0.55; pointer-events: none; }
+}
+
+// ── Error ───────────────────────────────────────────────
+.dash-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+.dash-error__btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #fda4af;
+  background: #fff;
+  color: #be123c;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: #ffe4e6; }
+}
+
+// ── Esqueletos de carga ─────────────────────────────────
+.skeleton {
+  border-radius: 14px;
+  background: linear-gradient(90deg, #eef2f7 25%, #f8fafc 50%, #eef2f7 75%);
+  background-size: 200% 100%;
+  animation: brillo 1.2s ease-in-out infinite;
+
+  &--kpi   { height: 104px; }
+  &--panel { height: 240px; }
+}
+
+@keyframes brillo {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+// ── Responsive ──────────────────────────────────────────
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .kpi-grid,
+  .dash-grid { grid-template-columns: 1fr; }
+}

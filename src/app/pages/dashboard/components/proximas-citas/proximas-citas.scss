@@ -1,0 +1,78 @@
+@use 'styles/abstracts/variables' as *;
+
+.citas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cita {
+  display: grid;
+  grid-template-columns: 4.6rem 1fr auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid #eef2f7;
+
+  &:last-child { border-bottom: none; }
+}
+
+.cita__cuando {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.cita__hora {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: $color-text;
+  font-variant-numeric: tabular-nums;
+}
+
+.cita__dia {
+  font-size: 0.72rem;
+  color: $color-text-muted;
+  text-transform: capitalize;
+
+  &--hoy { color: $color-primary; font-weight: 600; }
+}
+
+.cita__detalle { min-width: 0; }
+
+.cita__paciente,
+.cita__meta {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cita__paciente {
+  font-weight: 600;
+  font-size: 0.86rem;
+  color: $color-text;
+}
+
+.cita__meta {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.cita__estado {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+
+  &--confirmada { background: #dcfce7; color: #15803d; }
+  &--pendiente  { background: #fff7ed; color: #c2410c; }
+}
+
+.citas__vacio {
+  margin: 0;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: $color-text-muted;
+}

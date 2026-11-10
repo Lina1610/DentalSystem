@@ -1,0 +1,58 @@
+@use 'styles/abstracts/variables' as *;
+
+.ingresos__grafica {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.75rem;
+  height: 190px;
+}
+
+.mes {
+  display: grid;
+  grid-template-rows: 1.2rem 1fr 1.2rem;
+  gap: 0.3rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.mes__valor {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  white-space: nowrap;
+}
+
+.mes__pista {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-bottom: 1px solid $color-border;
+}
+
+.mes__barra {
+  width: min(2.4rem, 70%);
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, #3b82f6, $color-primary);
+  transition: height 0.4s ease;
+
+  // Mes sin ingresos: una línea tenue para que el mes no parezca faltante
+  &--vacia {
+    height: 2px !important;
+    background: #e2e8f0;
+  }
+}
+
+.mes__nombre {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  text-transform: capitalize;
+}
+
+.ingresos__total {
+  margin: 0.9rem 0 0;
+  font-size: 0.8rem;
+  color: $color-text-muted;
+
+  strong { color: $color-text; }
+}

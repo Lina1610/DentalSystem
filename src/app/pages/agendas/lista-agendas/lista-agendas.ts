@@ -1,12 +1,18 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { AgendaStore } from '../store/agenda.store';
 import { Agenda, EstadoAgenda } from '../interfaces/agenda.interface';
 import { CrearAgendaModalComponent, NuevoHorario } from '../components/modals/crear-agenda-modal/crear-agenda-modal';
+import { OdontologoService } from '../../odontologos/services/odontologo.service';
+import { Odontologo } from '../../odontologos/interfaces/odontologo.interface';
+import { ICONOS_LISTA, TarjetaResumen, esHoy, estiloAvatar, inicialesDe } from '../../../shared/utils/lista';
+
+type FiltroAgenda = 'todos' | EstadoAgenda;
 
 @Component({
   selector: 'app-lista-agendas',
@@ -17,12 +23,41 @@ import { CrearAgendaModalComponent, NuevoHorario } from '../components/modals/cr
 })
 export class ListaAgendasComponent implements OnInit, OnDestroy {
   readonly store = inject(AgendaStore);
+  private route = inject(ActivatedRoute);
+  private odontologoService = inject(OdontologoService);
   private busqueda$ = new Subject<string>();
   private sub!: Subscription;
 
   busqueda = '';
 
-  filtro: 'todos' | EstadoAgenda = 'todos';
+  filtro: FiltroAgenda = 'todos';
+
+  // Tarjetas de resumen: también funcionan como filtro por estado
+  readonly tarjetas: TarjetaResumen<FiltroAgenda>[] = [
+    { filtro: 'todos', label: 'Todos', color: 'blue', icono: ICONOS_LISTA.calendario,
+      valor: () => this.store.disponibles() + this.store.ocupados() + this.store.bloqueados() + this.store.noDisponibles() },
+    { filtro: 'DISPONIBLE', label: 'Disponibles', color: 'green', icono: ICONOS_LISTA.check,
+      valor: () => this.store.disponibles() },
+    { filtro: 'OCUPADO', label: 'Ocupados', color: 'amber', icono: ICONOS_LISTA.reloj,
+      valor: () => this.store.ocupados() },
+    { filtro: 'BLOQUEADO', label: 'Bloqueados', color: 'red', icono: ICONOS_LISTA.bloqueado,
+      valor: () => this.store.bloqueados() },
+    { filtro: 'NO_DISPONIBLE', label: 'No disponibles', color: 'slate', icono: ICONOS_LISTA.noDisponible,
+      valor: () => this.store.noDisponibles() },
+  ];
+
+  // Filtros por fecha y odontólogo
+  fechaFiltro = '';
+  odontologoFiltro: number | null = null;
+  readonly odontologos = signal<Odontologo[]>([]);
+
+  readonly iniciales = inicialesDe;
+  readonly esHoy = esHoy;
+  readonly getAvatarStyle = estiloAvatar;
+
+  get hayFiltros(): boolean {
+    return !!(this.busqueda || this.fechaFiltro || this.odontologoFiltro || this.filtro !== 'todos');
+  }
 
   readonly limite = 10;
 
@@ -69,6 +104,17 @@ export class ListaAgendasComponent implements OnInit, OnDestroy {
         this.cargarPagina();
       });
 
+    // Filtro que llega por la URL (p. ej. clic en una tarjeta del dashboard)
+    const estadoParam = this.route.snapshot.queryParamMap.get('estado');
+    const ESTADOS_VALIDOS = ['DISPONIBLE', 'OCUPADO', 'BLOQUEADO', 'NO_DISPONIBLE'];
+    if (estadoParam && ESTADOS_VALIDOS.includes(estadoParam)) {
+      this.filtro = estadoParam as EstadoAgenda;
+    }
+
+    this.odontologoService.obtenerOdontologos({ limite: 100, estado: 'ACTIVO' }).subscribe({
+      next: (res) => { this.odontologos.set(res.data); },
+    });
+
     this.cargarPagina();
   }
 
@@ -85,6 +131,8 @@ export class ListaAgendasComponent implements OnInit, OnDestroy {
       pagina: this.paginaActual,
       limite: this.limite,
       estado,
+      fecha: this.fechaFiltro,
+      id_odontologo: this.odontologoFiltro ?? undefined,
     });
   }
 
@@ -92,7 +140,28 @@ export class ListaAgendasComponent implements OnInit, OnDestroy {
     this.busqueda$.next(termino);
   }
 
-  setFiltro(filtro: 'todos' | EstadoAgenda): void {
+  setFechaFiltro(fecha: string): void {
+    this.fechaFiltro = fecha;
+    this.paginaActual = 1;
+    this.cargarPagina();
+  }
+
+  setOdontologoFiltro(id: number | null): void {
+    this.odontologoFiltro = id;
+    this.paginaActual = 1;
+    this.cargarPagina();
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda = '';
+    this.fechaFiltro = '';
+    this.odontologoFiltro = null;
+    this.filtro = 'todos';
+    this.paginaActual = 1;
+    this.cargarPagina();
+  }
+
+  setFiltro(filtro: FiltroAgenda): void {
     this.filtro = filtro;
     this.paginaActual = 1;
     this.cargarPagina();
@@ -124,6 +193,7 @@ export class ListaAgendasComponent implements OnInit, OnDestroy {
 
   abrirCrearModal(): void {
     this.crearError = '';
+    this.creando = false;
     this.mostrarCrearModal = true;
   }
 

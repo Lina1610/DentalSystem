@@ -10,7 +10,8 @@ export class CitaStore {
   // ── Estado privado ────────────────────────────────────
   private readonly _citas = signal<Cita[]>([]);
   private readonly _total        = signal(0);
-  private readonly _pendientes     = signal(0);
+  private readonly _totalGeneral = signal(0);
+  private readonly _pendientes    = signal(0);
   private readonly _confirmadas    = signal(0);
   private readonly _canceladas    = signal(0);
   private readonly _finalizadas   = signal(0);
@@ -20,6 +21,7 @@ export class CitaStore {
   // ── Estado público (solo lectura) ─────────────────────
   readonly citas  = this._citas.asReadonly();
   readonly total        = this._total.asReadonly();
+  readonly totalGeneral = this._totalGeneral.asReadonly();
   readonly pendientes     = this._pendientes.asReadonly();
   readonly confirmadas    = this._confirmadas.asReadonly();
   readonly canceladas     = this._canceladas .asReadonly();
@@ -31,13 +33,14 @@ export class CitaStore {
   readonly hayDatos = computed(() => this._citas().length > 0);
 
   // ── Acciones ──────────────────────────────────────────
-  cargar(opts: { busqueda?: string; pagina?: number; limite?: number; estado?: string } = {}): void {
+  cargar(opts: { busqueda?: string; pagina?: number; limite?: number; estado?: string; fecha?: string; id_odontologo?: number } = {}): void {
     this._cargando.set(true);
     this._error.set(null);
     this.service.obtenerCitas(opts).subscribe({
       next: (res) => {
         this._citas.set(res.data);
         this._total.set(res.total);
+        this._totalGeneral.set(res.totalGeneral ?? res.total);
         this._pendientes.set(res.pendientes);
         this._confirmadas.set(res.confirmadas);
         this._canceladas.set(res.canceladas);

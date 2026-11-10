@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,9 @@ import { Paciente } from '../interfaces/patient.interface';
 import { DetallePacienteComponent } from '../components/sections/detalle-paciente/detalle-paciente';
 import { EditarPacienteModalComponent } from '../components/modals/editar-paciente-modal/editar-paciente-modal';
 import { CrearPacienteModalComponent, NuevoPaciente } from '../components/modals/crear-paciente-modal/crear-paciente-modal';
+import { ICONOS_LISTA, TarjetaResumen, estiloAvatar } from '../../../shared/utils/lista';
+
+type FiltroPaciente = 'todos' | 'activos' | 'inactivos';
 
 @Component({
   selector: 'app-lista-pacientes',
@@ -30,8 +33,25 @@ export class ListaPacientesComponent implements OnInit, OnDestroy {
   pacientes:    Paciente[] = [];
   busqueda      = '';
   cargando      = false;
-  filtro: 'todos' | 'activos' | 'inactivos' = 'todos';
+  filtro: FiltroPaciente = 'todos';
   pacienteDetalle: Paciente | null = null;
+
+  // Tarjetas de resumen: también funcionan como filtro por estado
+  readonly tarjetas: TarjetaResumen<FiltroPaciente>[] = [
+    { filtro: 'todos', label: 'Todos', color: 'blue', icono: ICONOS_LISTA.usuarios,
+      valor: () => this.totalPacientesActivos + this.totalPacientesInactivos },
+    { filtro: 'activos', label: 'Activos', color: 'green', icono: ICONOS_LISTA.usuarioActivo,
+      valor: () => this.totalPacientesActivos },
+    { filtro: 'inactivos', label: 'Inactivos', color: 'slate', icono: ICONOS_LISTA.usuarioInactivo,
+      valor: () => this.totalPacientesInactivos },
+  ];
+
+  // Id del paciente cuyo menú de acciones (⋯) está abierto
+  menuAccionesId: number | null = null;
+
+  get hayFiltros(): boolean {
+    return !!this.busqueda || this.filtro !== 'todos';
+  }
 
   // ── Paginación ────────────────────────────────────────
   readonly limite      = 10;
@@ -67,21 +87,28 @@ export class ListaPacientesComponent implements OnInit, OnDestroy {
   creando    = false;
   crearError = '';
 
-  private readonly avatarColors = [
-    { bg: '#f3e8ff', color: '#7c3aed' },
-    { bg: '#dbeafe', color: '#1d4ed8' },
-    { bg: '#ffedd5', color: '#c2410c' },
-    { bg: '#dcfce7', color: '#15803d' },
-    { bg: '#ccfbf1', color: '#0f766e' },
-    { bg: '#fce7f3', color: '#be185d' },
-  ];
+  readonly getAvatarStyle = estiloAvatar;
 
   getInitials(nombres: string, apellidos: string): string {
-    return (nombres?.[0] ?? '') + (apellidos?.[0] ?? '');
+    return ((nombres?.[0] ?? '') + (apellidos?.[0] ?? '')).toUpperCase();
   }
-  getAvatarStyle(id: number): object {
-    const c = this.avatarColors[(id - 1) % this.avatarColors.length];
-    return { 'background-color': c.bg, 'color': c.color };
+
+  toggleMenuAcciones(id: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.menuAccionesId = this.menuAccionesId === id ? null : id;
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarMenuAcciones(): void {
+    this.menuAccionesId = null;
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda     = '';
+    this.filtro       = 'todos';
+    this.paginaActual = 1;
+    this.cargarPagina();
   }
 
   // ── Ciclo de vida ─────────────────────────────────────
@@ -95,6 +122,12 @@ export class ListaPacientesComponent implements OnInit, OnDestroy {
       this.paginaActual = 1;
       this.cargarPagina();
     });
+
+    // Filtro que llega por la URL (p. ej. clic en una tarjeta del dashboard)
+    const estadoParam = this.route.snapshot.queryParamMap.get('estado');
+    if (estadoParam === 'activos' || estadoParam === 'inactivos') {
+      this.filtro = estadoParam;
+    }
 
     this.cargarPagina();
 
@@ -157,7 +190,7 @@ export class ListaPacientesComponent implements OnInit, OnDestroy {
     if (this.paginaActual < this.totalPaginas) { this.paginaActual++; this.cargarPagina(); }
   }
 
-  setFiltro(f: 'todos' | 'activos' | 'inactivos'): void {
+  setFiltro(f: FiltroPaciente): void {
     this.filtro       = f;
     this.paginaActual = 1;
     this.cargarPagina();
@@ -194,6 +227,8 @@ export class ListaPacientesComponent implements OnInit, OnDestroy {
       fecha_nacimiento: paciente.fecha_nacimiento
         ? paciente.fecha_nacimiento.toString().substring(0, 10) : '',
     };
+    this.guardando      = false;
+    this.guardandoError = '';
     this.mostrarModal = true;
   }
 
@@ -229,6 +264,7 @@ export class ListaPacientesComponent implements OnInit, OnDestroy {
   // ── Modal crear ───────────────────────────────────────
   abrirCrearModal(): void {
     this.crearError       = '';
+    this.creando          = false;
     this.mostrarCrearModal = true;
   }
 

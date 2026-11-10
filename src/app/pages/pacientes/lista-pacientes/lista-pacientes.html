@@ -1,98 +1,41 @@
-<!-- ── Breadcrumb ─────────────────────────────────────── -->
-<nav class="breadcrumb">
-  <span class="breadcrumb-item">Inicio</span>
-  <span class="breadcrumb-sep">/</span>
-  <span class="breadcrumb-item breadcrumb-item--active">Pacientes</span>
-</nav>
-
 <!-- ── Page header ───────────────────────────────────── -->
 <div class="page-header">
   <div>
     <h1 class="page-title">Pacientes</h1>
-    <p class="page-subtitle">
-      Gestiona la información clínica y registros de <strong>los pacientes</strong>.
-    </p>
+    <p class="page-subtitle">Gestiona la información clínica y registros de los pacientes.</p>
   </div>
-  <button class="btn-primary-lg" (click)="abrirCrearModal()"><span>+</span> Nuevo Paciente</button>
+  <button class="btn-primary-lg" (click)="abrirCrearModal()">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+    Nuevo paciente
+  </button>
 </div>
 
-<!-- ── Stats cards ───────────────────────────────────── -->
-<div class="stats-grid">
-  <div class="stat-card">
-    <div class="stat-icon stat-icon--blue">
-      <svg
-        width="20"
-        height="20"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    </div>
-    <div>
-      <p class="stat-label">Total Pacientes</p>
-      <p class="stat-value">{{ totalRegistros }}</p>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon stat-icon--green">
-      <svg
-        width="20"
-        height="20"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2.5"
-      >
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-    </div>
-    <div>
-      <p class="stat-label">Pacientes Activos</p>
-      <p class="stat-value stat-value--green">{{ totalPacientesActivos }}</p>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon stat-icon--red">
-      <svg
-        width="20"
-        height="20"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2.5"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-    </div>
-    <div>
-      <p class="stat-label">Pacientes Inactivos</p>
-      <p class="stat-value stat-value--red">{{ totalPacientesInactivos }}</p>
-    </div>
-  </div>
+<!-- ── Tarjetas de resumen (clic = filtrar) ──────────── -->
+<div class="summary-cards">
+  @for (t of tarjetas; track t.filtro) {
+    <button
+      [class]="'summary-card summary-card--' + t.color"
+      [class.summary-card--active]="filtro === t.filtro"
+      (click)="setFiltro(t.filtro)"
+    >
+      <span class="summary-card__icon">
+        <svg viewBox="0 0 24 24"><path [attr.d]="t.icono" /></svg>
+      </span>
+      <span class="summary-card__text">
+        <span class="summary-card__label">{{ t.label }}</span>
+        <span class="summary-card__value">{{ t.valor() }}</span>
+      </span>
+    </button>
+  }
 </div>
 
 <!-- ── Toolbar ────────────────────────────────────────── -->
-<div class="toolbar">
+<div class="list-toolbar">
   <div class="search-input-wrap">
-    <svg
-      class="search-icon"
-      width="15"
-      height="15"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <svg class="search-icon" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
     <input
       type="text"
@@ -104,170 +47,113 @@
     <button *ngIf="busqueda" class="btn-clear" (click)="onBuscar('')">✕</button>
   </div>
 
-  <div class="filter-tabs">
-    <button class="filter-tab" [class.active]="filtro === 'todos'" (click)="setFiltro('todos')">
-      Todos
-    </button>
-    <button class="filter-tab" [class.active]="filtro === 'activos'" (click)="setFiltro('activos')">
-      Activos
-    </button>
-    <button
-      class="filter-tab"
-      [class.active]="filtro === 'inactivos'"
-      (click)="setFiltro('inactivos')"
-    >
-      Inactivos
-    </button>
+  <div class="list-toolbar__filters">
+    <button *ngIf="hayFiltros" class="btn-link" (click)="limpiarFiltros()">Limpiar filtros</button>
   </div>
 </div>
 
-<!-- ── Table ──────────────────────────────────────────── -->
-<div class="table-wrapper">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Paciente</th>
-        <th>Documento</th>
-        <th>Teléfono</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let p of pacientes; trackBy: trackByPaciente">
-        <td class="col-id">{{ p.id_paciente }}</td>
-        <td>
-          <div class="paciente-cell">
-            <div class="avatar" [ngStyle]="getAvatarStyle(p.id_paciente!)">
-              {{ getInitials(p.nombres, p.apellidos) }}
-              <span
-                class="avatar-dot"
-                [class.dot-activo]="p.estado === 'ACTIVO'"
-                [class.dot-inactivo]="p.estado !== 'ACTIVO'"
-              ></span>
-            </div>
-            <div>
-              <p class="paciente-name">{{ p.nombres }} {{ p.apellidos }}</p>
-              <p class="paciente-role">Paciente</p>
-            </div>
-          </div>
-        </td>
-        <td class="col-mono">{{ p.documento }}</td>
-        <td>{{ p.telefono }}</td>
-        <td>
-          <span
-            class="estado-badge"
-            [class.activo]="p.estado === 'ACTIVO'"
-            [class.inactivo]="p.estado !== 'ACTIVO'"
-          >
-            {{ p.estado }}
-          </span>
-        </td>
-        <td class="col-actions">
-          <div class="btn-group">
-            <button
-              class="icon-btn icon-btn--blue"
-              title="Ver detalles"
-              (click)="pacienteDetalle = p"
-            >
-              <svg
-                width="15"
-                height="15"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </button>
-            <button class="icon-btn icon-btn--gray" title="Editar" (click)="abrirEditar(p)">
-              <svg
-                width="15"
-                height="15"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            </button>
-            <button
-              class="icon-btn"
-              [class.icon-btn--green]="p.estado === 'ACTIVO'"
-              [class.icon-btn--orange]="p.estado !== 'ACTIVO'"
-              tabindex="-1"
-              style="pointer-events: none"
-              aria-hidden="true"
-            >
-              <!-- Candado abierto si ACTIVO -->
-              <svg
-                *ngIf="p.estado === 'ACTIVO'"
-                width="15"
-                height="15"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0" />
-              </svg>
-              <!-- Candado cerrado si INACTIVO -->
-              <svg
-                *ngIf="p.estado !== 'ACTIVO'"
-                width="15"
-                height="15"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </button>
-            <button
-              class="btn-toggle"
-              [class.btn-deactivate]="p.estado === 'ACTIVO'"
-              [class.btn-activate]="p.estado !== 'ACTIVO'"
-              (click)="cambiarEstado(p.id_paciente!)"
-            >
-              {{ p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
-            </button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+<!-- ── Loader ─────────────────────────────────────────── -->
+<div *ngIf="cargando && pacientes.length === 0" class="table-card">
+  <div class="skeleton-row" *ngFor="let _ of [1, 2, 3, 4, 5]"></div>
+</div>
 
-  <p class="empty-state" *ngIf="pacientes.length === 0 && !cargando">No hay pacientes.</p>
+<!-- ── Table ──────────────────────────────────────────── -->
+<div class="table-card" *ngIf="!(cargando && pacientes.length === 0)">
+  <div class="table-scroll" *ngIf="pacientes.length > 0">
+    <table class="list-table">
+      <thead>
+        <tr>
+          <th>Paciente</th>
+          <th>Contacto</th>
+          <th>Estado</th>
+          <th class="col-actions"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of pacientes; trackBy: trackByPaciente" [class.row--muted]="p.estado !== 'ACTIVO'">
+          <td class="td-primary">
+            <div class="cell-person">
+              <span class="avatar-circle" [ngStyle]="getAvatarStyle(p.id_paciente!)">{{ getInitials(p.nombres, p.apellidos) }}</span>
+              <div class="cell-stack">
+                <span class="cell-main">{{ p.nombres }} {{ p.apellidos }}</span>
+                <span class="cell-sub">CC {{ p.documento }}</span>
+              </div>
+            </div>
+          </td>
+
+          <td data-label="Contacto">
+            <div class="cell-stack">
+              <span class="cell-text">{{ p.telefono || '—' }}</span>
+              <span class="cell-sub">{{ p.email || 'Sin correo' }}</span>
+            </div>
+          </td>
+
+          <td data-label="Estado">
+            <span class="status-pill" [class.status-pill--activo]="p.estado === 'ACTIVO'" [class.status-pill--inactivo]="p.estado !== 'ACTIVO'">
+              <span>{{ p.estado === 'ACTIVO' ? 'Activo' : 'Inactivo' }}</span>
+            </span>
+          </td>
+
+          <td class="col-actions">
+            <div class="actions-menu">
+              <button
+                class="kebab-btn"
+                title="Acciones"
+                [class.kebab-btn--open]="menuAccionesId === p.id_paciente"
+                (click)="toggleMenuAcciones(p.id_paciente!, $event)"
+              >
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" /></svg>
+              </button>
+
+              <div class="actions-dropdown" *ngIf="menuAccionesId === p.id_paciente">
+                <button (click)="pacienteDetalle = p">
+                  <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0" /></svg>
+                  Ver detalles
+                </button>
+                <button (click)="abrirEditar(p)">
+                  <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                  Editar
+                </button>
+                <hr />
+                <button [class.danger]="p.estado === 'ACTIVO'" [class.success]="p.estado !== 'ACTIVO'" (click)="cambiarEstado(p.id_paciente!)">
+                  <svg viewBox="0 0 24 24"><path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.77.04" /></svg>
+                  {{ p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="empty-block" *ngIf="pacientes.length === 0 && !cargando">
+    <span class="empty-block__icon">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M5 7a4 4 0 1 0 8 0a4 4 0 1 0-8 0M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+    </span>
+    <p class="empty-block__title">{{ hayFiltros ? 'No hay pacientes con estos filtros' : 'Aún no hay pacientes registrados' }}</p>
+    <p class="empty-block__text">{{ hayFiltros ? 'Prueba con otra búsqueda o limpia los filtros.' : 'Registra el primer paciente para empezar.' }}</p>
+    @if (hayFiltros) {
+      <button class="btn-outline" (click)="limpiarFiltros()">Limpiar filtros</button>
+    } @else {
+      <button class="btn-primary-lg" (click)="abrirCrearModal()">Nuevo paciente</button>
+    }
+  </div>
 
   <!-- ── Paginación ──────────────────────────────────── -->
-  <div class="pagination" *ngIf="totalPaginas > 1 || totalRegistros > 0">
-    <span class="pagination-info">
-      Mostrando {{ desde }}&ndash;{{ hasta }} de {{ totalRegistros }} pacientes
+  <div class="table-footer" *ngIf="pacientes.length > 0">
+    <span class="table-footer__info">
+      Mostrando <strong>{{ desde }}–{{ hasta }}</strong> de <strong>{{ totalRegistros }}</strong> pacientes
     </span>
-    <div class="pagination-controls">
-      <button class="page-btn" (click)="anterior()" [disabled]="paginaActual === 1">
-        &#8592; Anterior
-      </button>
+
+    <div class="table-footer__pages" *ngIf="totalPaginas > 1">
+      <button class="pg-btn" (click)="anterior()" [disabled]="paginaActual === 1" aria-label="Anterior">‹</button>
       <ng-container *ngFor="let p of paginas">
-        <button
-          *ngIf="p !== '...'"
-          class="page-btn page-num"
-          [class.active]="p === paginaActual"
-          (click)="irPagina(p)"
-        >{{ p }}</button>
-        <span *ngIf="p === '...'" class="page-ellipsis">&#8230;</span>
+        <button *ngIf="p !== '...'" class="pg-btn" [class.pg-btn--active]="p === paginaActual" (click)="irPagina(p)">{{ p }}</button>
+        <span *ngIf="p === '...'" class="pg-ellipsis">…</span>
       </ng-container>
-      <button class="page-btn" (click)="siguiente()" [disabled]="paginaActual === totalPaginas">
-        Siguiente &#8594;
-      </button>
+      <button class="pg-btn" (click)="siguiente()" [disabled]="paginaActual === totalPaginas" aria-label="Siguiente">›</button>
     </div>
   </div>
 </div>

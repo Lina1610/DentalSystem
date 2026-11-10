@@ -1,0 +1,186 @@
+<!-- ── Page header ───────────────────────────────────── -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Servicios</h1>
+    <p class="page-subtitle">Gestiona el catálogo de servicios, sus precios y duración.</p>
+  </div>
+  <button class="btn-primary-lg" (click)="abrirCrearModal()">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+    Nuevo servicio
+  </button>
+</div>
+
+<!-- ── Tarjetas de resumen (clic = filtrar) ──────────── -->
+<div class="summary-cards">
+  @for (t of tarjetas; track t.filtro) {
+    <button
+      [class]="'summary-card summary-card--' + t.color"
+      [class.summary-card--active]="filtro === t.filtro"
+      (click)="setFiltro(t.filtro)"
+    >
+      <span class="summary-card__icon">
+        <svg viewBox="0 0 24 24"><path [attr.d]="t.icono" /></svg>
+      </span>
+      <span class="summary-card__text">
+        <span class="summary-card__label">{{ t.label }}</span>
+        <span class="summary-card__value">{{ t.valor() }}</span>
+      </span>
+    </button>
+  }
+</div>
+
+<!-- ── Toolbar ────────────────────────────────────────── -->
+<div class="list-toolbar">
+  <div class="search-input-wrap">
+    <svg class="search-icon" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Buscar por nombre del servicio..."
+      [value]="busqueda"
+      (input)="onBuscar($any($event.target).value)"
+    />
+    <button *ngIf="busqueda" class="btn-clear" (click)="onBuscar('')">✕</button>
+  </div>
+
+  <div class="list-toolbar__filters">
+    <button *ngIf="hayFiltros" class="btn-link" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </div>
+</div>
+
+<!-- Error de carga o de cambio de estado -->
+<p class="error-banner" *ngIf="store.error()">{{ store.error() }}</p>
+
+<!-- ── Loader ─────────────────────────────────────────── -->
+<div *ngIf="store.cargando() && !store.hayDatos()" class="table-card">
+  <div class="skeleton-row" *ngFor="let _ of [1, 2, 3, 4, 5]"></div>
+</div>
+
+<!-- ── Table ──────────────────────────────────────────── -->
+<div class="table-card" *ngIf="!(store.cargando() && !store.hayDatos())">
+  <div class="table-scroll" *ngIf="store.hayDatos()">
+    <table class="list-table">
+      <thead>
+        <tr>
+          <th>Servicio</th>
+          <th class="col-num">Precio</th>
+          <th>Duración</th>
+          <th>Estado</th>
+          <th class="col-actions"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of store.servicios(); trackBy: trackByServicio" [class.row--muted]="s.estado !== 'ACTIVO'">
+          <td class="td-primary">
+            <div class="cell-person">
+              <span class="avatar-circle" [ngStyle]="getAvatarStyle(s.id_servicio!)">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="iconoServicio" /></svg>
+              </span>
+              <div class="cell-stack">
+                <span class="cell-main">{{ s.nombre }}</span>
+                <span class="cell-sub cell-truncate" [title]="s.descripcion ?? ''">{{ s.descripcion || 'Sin descripción' }}</span>
+              </div>
+            </div>
+          </td>
+
+          <td class="col-num" data-label="Precio">
+            <span class="cell-main">{{ formatearPrecio(s.precio) }}</span>
+          </td>
+
+          <td data-label="Duración">
+            <span class="badge-soft">{{ formatearDuracion(s.duracion_minutos) }}</span>
+          </td>
+
+          <td data-label="Estado">
+            <span class="status-pill" [class.status-pill--activo]="s.estado === 'ACTIVO'" [class.status-pill--inactivo]="s.estado !== 'ACTIVO'">
+              <span>{{ s.estado === 'ACTIVO' ? 'Activo' : 'Inactivo' }}</span>
+            </span>
+          </td>
+
+          <td class="col-actions">
+            <div class="actions-menu">
+              <button
+                class="kebab-btn"
+                title="Acciones"
+                [class.kebab-btn--open]="menuAccionesId === s.id_servicio"
+                (click)="toggleMenuAcciones(s.id_servicio!, $event)"
+              >
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" /></svg>
+              </button>
+
+              <div class="actions-dropdown" *ngIf="menuAccionesId === s.id_servicio">
+                <button (click)="abrirEditar(s)">
+                  <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                  Editar
+                </button>
+                <hr />
+                <button
+                  [class.danger]="s.estado === 'ACTIVO'"
+                  [class.success]="s.estado !== 'ACTIVO'"
+                  [title]="s.estado === 'ACTIVO' ? 'Dejará de aparecer al agendar citas nuevas' : ''"
+                  (click)="cambiarEstado(s.id_servicio!)"
+                >
+                  <svg viewBox="0 0 24 24"><path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.77.04" /></svg>
+                  {{ s.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="empty-block" *ngIf="!store.hayDatos() && !store.cargando()">
+    <span class="empty-block__icon">
+      <svg viewBox="0 0 24 24"><path [attr.d]="iconoServicio" /></svg>
+    </span>
+    <p class="empty-block__title">{{ hayFiltros ? 'No hay servicios con estos filtros' : 'Aún no hay servicios registrados' }}</p>
+    <p class="empty-block__text">{{ hayFiltros ? 'Prueba con otra búsqueda o limpia los filtros.' : 'Crea el primer servicio del catálogo.' }}</p>
+    @if (hayFiltros) {
+      <button class="btn-outline" (click)="limpiarFiltros()">Limpiar filtros</button>
+    } @else {
+      <button class="btn-primary-lg" (click)="abrirCrearModal()">Nuevo servicio</button>
+    }
+  </div>
+
+  <!-- ── Paginación ──────────────────────────────────── -->
+  <div class="table-footer" *ngIf="store.hayDatos()">
+    <span class="table-footer__info">
+      Mostrando <strong>{{ desde }}–{{ hasta }}</strong> de <strong>{{ store.total() }}</strong> servicios
+    </span>
+
+    <div class="table-footer__pages" *ngIf="totalPaginas > 1">
+      <button class="pg-btn" (click)="anterior()" [disabled]="paginaActual === 1" aria-label="Anterior">‹</button>
+      <ng-container *ngFor="let p of paginas">
+        <button *ngIf="p !== '...'" class="pg-btn" [class.pg-btn--active]="p === paginaActual" (click)="irPagina(p)">{{ p }}</button>
+        <span *ngIf="p === '...'" class="pg-ellipsis">…</span>
+      </ng-container>
+      <button class="pg-btn" (click)="siguiente()" [disabled]="paginaActual === totalPaginas" aria-label="Siguiente">›</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal crear servicio -->
+<app-crear-servicio-modal
+  [mostrar]="mostrarCrearModal"
+  [guardando]="creando"
+  [errorMsg]="crearError"
+  (cerrar)="cerrarCrearModal()"
+  (guardar)="registrarServicio($event)"
+/>
+
+<!-- Modal editar servicio -->
+<app-editar-servicio-modal
+  [mostrar]="!!servicioEditando"
+  [servicio]="servicioEditando"
+  [guardando]="guardando"
+  [errorMsg]="editarError"
+  (cerrar)="cerrarEditar()"
+  (guardar)="guardarCambios($event)"
+/>

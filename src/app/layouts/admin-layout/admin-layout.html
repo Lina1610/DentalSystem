@@ -3,51 +3,53 @@
   <!-- SIDEBAR -->
   <aside class="admin__sidebar">
 
-    <div class="admin__brand">
-      <span class="admin__brand-name">Dental System</span>
-    </div>
+    <a class="admin__brand" routerLink="dashboard">
+      <span class="admin__brand-logo">
+        <svg class="admin__icon" viewBox="0 0 24 24" aria-hidden="true">
+          @for (d of iconos['diente']; track $index) { <path [attr.d]="d" /> }
+        </svg>
+      </span>
+      <span class="admin__brand-text">
+        <span class="admin__brand-name">Dental System</span>
+        <span class="admin__brand-sub">Gestión del consultorio</span>
+      </span>
+    </a>
 
     <nav class="admin__nav">
+      @for (grupo of menu; track grupo.titulo) {
+        <div class="admin__nav-section">
+          <span class="admin__nav-title">{{ grupo.titulo }}</span>
 
-      <a class="admin__nav-item" routerLink="dashboard" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Dashboard</span>
-      </a>
-      <a class="admin__nav-item" routerLink="odontologos" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Odontologos</span>
-      </a>
-
-      <a class="admin__nav-item" routerLink="pacientes" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Pacientes</span>
-      </a>
-
-      <a class="admin__nav-item" routerLink="citas" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Citas</span>
-      </a>
-
-      <a class="admin__nav-item" routerLink="agenda" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Agenda</span>
-      </a>
-
-       <a class="admin__nav-item" routerLink="servicios" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Servicios</span>
-      </a>
-
-       <a class="admin__nav-item" routerLink="facturacion" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Facturación</span>
-      </a>
-       <a class="admin__nav-item" routerLink="reportes" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Reportes</span>
-      </a>
-      <a class="admin__nav-item" routerLink="configuracion" routerLinkActive="admin__nav-item--active">
-        <span class="admin__nav-label">Configuración</span>
-      </a>
-
+          @for (item of grupo.items; track item.ruta) {
+            <a
+              class="admin__nav-item"
+              [routerLink]="item.ruta"
+              routerLinkActive="admin__nav-item--active"
+              [attr.title]="menuAbierto ? null : item.label"
+            >
+              <svg class="admin__icon" viewBox="0 0 24 24" aria-hidden="true">
+                @for (d of iconos[item.icono]; track $index) { <path [attr.d]="d" /> }
+              </svg>
+              <span class="admin__nav-label">{{ item.label }}</span>
+            </a>
+          }
+        </div>
+      }
     </nav>
 
     <div class="admin__sidebar-footer">
-      <button class="admin__logout" (click)="cerrarSesion()">
-        <span>🚪</span> Cerrar sesión
-      </button>
+      <div class="admin__profile">
+        <span class="admin__avatar admin__avatar--dark">{{ iniciales }}</span>
+        <span class="admin__profile-info">
+          <span class="admin__profile-name">Administrador</span>
+          <span class="admin__profile-email">{{ nombreUsuario }}</span>
+        </span>
+        <button class="admin__logout" (click)="cerrarSesion()" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <svg class="admin__icon" viewBox="0 0 24 24" aria-hidden="true">
+            @for (d of iconos['salir']; track $index) { <path [attr.d]="d" /> }
+          </svg>
+        </button>
+      </div>
     </div>
 
   </aside>
@@ -56,8 +58,70 @@
   <div class="admin__main">
 
     <header class="admin__topbar">
-      <button class="admin__toggle" (click)="toggleMenu()">☰</button>
-      <span class="admin__user">{{ nombreUsuario }}</span>
+      <div class="admin__topbar-left">
+        <button class="admin__toggle" (click)="toggleMenu()" aria-label="Mostrar u ocultar menú">
+          <svg class="admin__icon" viewBox="0 0 24 24" aria-hidden="true">
+            @for (d of iconos['panel']; track $index) { <path [attr.d]="d" /> }
+          </svg>
+        </button>
+        <span class="admin__divider"></span>
+        <div class="admin__heading">
+          <nav class="admin__crumbs" aria-label="Ruta">
+            <a routerLink="dashboard">Inicio</a>
+            <span class="admin__crumbs-sep">/</span>
+            <span class="admin__section">{{ tituloSeccion }}</span>
+          </nav>
+          <span class="admin__date">
+            <svg class="admin__icon admin__icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+              @for (d of iconos['calendario']; track $index) { <path [attr.d]="d" /> }
+            </svg>
+            {{ fechaHoy }}
+          </span>
+        </div>
+      </div>
+
+      <div class="admin__topbar-right">
+        <button class="admin__cta" (click)="nuevaCita()">
+          <svg class="admin__icon admin__icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+            @for (d of iconos['mas']; track $index) { <path [attr.d]="d" /> }
+          </svg>
+          <span class="admin__cta-label">Nueva cita</span>
+        </button>
+
+        <div class="admin__user-menu">
+          <button class="admin__user" (click)="toggleMenuUsuario()" [attr.aria-expanded]="menuUsuarioAbierto">
+            <span class="admin__avatar">{{ iniciales }}</span>
+            <span class="admin__user-info">
+              <span class="admin__user-name">Administrador</span>
+              <span class="admin__user-role">{{ nombreUsuario }}</span>
+            </span>
+            <svg class="admin__icon admin__icon--sm admin__chevron" [class.admin__chevron--open]="menuUsuarioAbierto" viewBox="0 0 24 24" aria-hidden="true">
+              @for (d of iconos['chevron']; track $index) { <path [attr.d]="d" /> }
+            </svg>
+          </button>
+
+          @if (menuUsuarioAbierto) {
+            <div class="admin__dropdown" role="menu">
+              <div class="admin__dropdown-header">
+                <span class="admin__dropdown-label">Sesión iniciada como</span>
+                <span class="admin__dropdown-email">{{ nombreUsuario }}</span>
+              </div>
+              <a class="admin__dropdown-item" routerLink="configuracion" (click)="menuUsuarioAbierto = false" role="menuitem">
+                <svg class="admin__icon admin__icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                  @for (d of iconos['configuracion']; track $index) { <path [attr.d]="d" /> }
+                </svg>
+                Configuración
+              </a>
+              <button class="admin__dropdown-item admin__dropdown-item--danger" (click)="cerrarSesion()" role="menuitem">
+                <svg class="admin__icon admin__icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                  @for (d of iconos['salir']; track $index) { <path [attr.d]="d" /> }
+                </svg>
+                Cerrar sesión
+              </button>
+            </div>
+          }
+        </div>
+      </div>
     </header>
 
     <main class="admin__content">

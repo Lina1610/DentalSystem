@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+﻿import { Component, HostListener, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,6 +8,9 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { OdontologoStore } from '../store/odontologo.store';
 import { Odontologo } from '../interfaces/odontologo.interface';
 import { CrearOdontologoModalComponent, NuevoOdontologo } from '../components/modals/crear-odontologo-modal/crear-odontologo-modal';
+import { ICONOS_LISTA, TarjetaResumen, estiloAvatar } from '../../../shared/utils/lista';
+
+type FiltroOdontologo = 'todos' | 'activos' | 'inactivos';
 
 @Component({
   selector: 'app-lista-odontologos',
@@ -26,16 +29,28 @@ export class ListaOdontologosComponent implements OnInit, OnDestroy {
   private sub!: Subscription;
 
   busqueda     = '';
-  filtro: 'todos' | 'activos' | 'inactivos' = 'todos';
-  odontologos:    Odontologo[] = [];
-  
+  filtro: FiltroOdontologo = 'todos';
+
+  // Tarjetas de resumen: también funcionan como filtro por estado
+  readonly tarjetas: TarjetaResumen<FiltroOdontologo>[] = [
+    { filtro: 'todos', label: 'Todos', color: 'blue', icono: ICONOS_LISTA.usuarios,
+      valor: () => this.store.activos() + this.store.inactivos() },
+    { filtro: 'activos', label: 'Activos', color: 'green', icono: ICONOS_LISTA.usuarioActivo,
+      valor: () => this.store.activos() },
+    { filtro: 'inactivos', label: 'Inactivos', color: 'slate', icono: ICONOS_LISTA.usuarioInactivo,
+      valor: () => this.store.inactivos() },
+  ];
+
+  // Id del odontólogo cuyo menú de acciones (⋯) está abierto
+  menuAccionesId: number | null = null;
+
+  get hayFiltros(): boolean {
+    return !!this.busqueda || this.filtro !== 'todos';
+  }
 
   // ── Paginación ───────────────────────────────────────
   readonly limite = 10;
   paginaActual    = 1;
-  totalRegistros       = 0;
-  totalOdontologosActivos   = 0;
-  totalOdontologosInactivos = 0;
 
   get totalPaginas(): number { return Math.max(1, Math.ceil(this.store.total() / this.limite)); }
   get desde(): number { return Math.min((this.paginaActual - 1) * this.limite + 1, this.store.total()); }
@@ -57,21 +72,32 @@ export class ListaOdontologosComponent implements OnInit, OnDestroy {
   creando           = false;
   crearError        = '';
 
-  private readonly avatarColors = [
-    { bg: '#f3e8ff', color: '#7c3aed' },
-    { bg: '#dbeafe', color: '#1d4ed8' },
-    { bg: '#ffedd5', color: '#c2410c' },
-    { bg: '#dcfce7', color: '#15803d' },
-    { bg: '#ccfbf1', color: '#0f766e' },
-    { bg: '#fce7f3', color: '#be185d' },
-  ];
+  readonly getAvatarStyle = estiloAvatar;
 
   getInitials(nombres: string, apellidos: string): string {
-    return (nombres?.[0] ?? '') + (apellidos?.[0] ?? '');
+    return ((nombres?.[0] ?? '') + (apellidos?.[0] ?? '')).toUpperCase();
   }
-  getAvatarStyle(id: number): object {
-    const c = this.avatarColors[(id - 1) % this.avatarColors.length];
-    return { 'background-color': c.bg, 'color': c.color };
+
+  toggleMenuAcciones(id: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.menuAccionesId = this.menuAccionesId === id ? null : id;
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarMenuAcciones(): void {
+    this.menuAccionesId = null;
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda     = '';
+    this.filtro       = 'todos';
+    this.paginaActual = 1;
+    this.cargarPagina();
+  }
+
+  verCitas(o: Odontologo): void {
+    this.router.navigate(['/admin/citas'], { queryParams: { id_odontologo: o.id_odontologo } });
   }
 
   ngOnInit(): void {
@@ -123,7 +149,7 @@ export class ListaOdontologosComponent implements OnInit, OnDestroy {
   siguiente(): void {
     if (this.paginaActual < this.totalPaginas) { this.paginaActual++; this.cargarPagina(); }
   }
-  setFiltro(f: 'todos' | 'activos' | 'inactivos'): void {
+  setFiltro(f: FiltroOdontologo): void {
     this.filtro       = f;
     this.paginaActual = 1;
     this.cargarPagina();
@@ -136,6 +162,7 @@ export class ListaOdontologosComponent implements OnInit, OnDestroy {
 
   abrirCrearModal(): void {
     this.crearError        = '';
+    this.creando           = false;
     this.mostrarCrearModal = true;
   }
   cerrarCrearModal(): void {

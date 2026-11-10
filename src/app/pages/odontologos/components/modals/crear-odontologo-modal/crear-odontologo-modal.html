@@ -59,7 +59,7 @@
         </div>
         <div class="form-group">
           <label>Contraseña <span class="req">*</span></label>
-          <input type="password" [(ngModel)]="form.password_hash" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+          <input type="password" [(ngModel)]="form.password" placeholder="Mínimo 8 caracteres, con letras y números" maxlength="72" autocomplete="new-password" />
         </div>
       </div>
 
