@@ -9,11 +9,8 @@ const {
   guardsDocumento,
 } = require('../middlewares/validation/paciente.guard');
 
-// const { verificarToken } = require('../middlewares/auth.middleware');
-// const { soloRoles } = require('../middlewares/roles.middleware');
-
 // ---------------------------------------------------------
-// Rutas protegidas con JWT
+// Rutas protegidas con JWT (verificarToken + soloRoles en app.js)
 // ---------------------------------------------------------
 
 // GET    /pacientes               → listar todos

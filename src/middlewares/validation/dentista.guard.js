@@ -3,6 +3,7 @@
 
 const { body, param } = require('express-validator');
 const validar = require('../validation.middleware');
+const { problemasDePolitica } = require('../../helpers/password');
 
 const guardsCrear = [
   // ── Datos personales (tabla usuario) ──────────────────
@@ -37,9 +38,19 @@ const guardsCrear = [
     .notEmpty().withMessage('El nombre de usuario es obligatorio')
     .isLength({ min: 3, max: 50 }).withMessage('Entre 3 y 50 caracteres'),
 
+  // Sin .trim(): la contraseña se guarda exactamente como se escribió.
+  // El cliente envía la contraseña en claro (por HTTPS); el hash lo genera SOLO el servidor.
+  body('password')
+    .custom((password, { req }) => {
+      const problemas = problemasDePolitica(password, req.body);
+      if (problemas.length > 0) throw new Error(problemas.join('. '));
+      return true;
+    }),
+
+  // Rechazo explícito del nombre viejo: si un cliente desactualizado lo envía,
+  // que falle claro en vez de crear un usuario sin contraseña utilizable.
   body('password_hash')
-    .notEmpty().withMessage('La contraseña es obligatoria')
-    .isLength({ min: 6 }).withMessage('Mínimo 6 caracteres'),
+    .not().exists().withMessage('Campo no permitido: envía la contraseña en "password"'),
 
   body('tarjeta_profesional')
     .trim()
@@ -58,9 +69,10 @@ const guardsCrear = [
     .notEmpty().withMessage('El consultorio es obligatorio')
     .isInt({ min: 1 }).withMessage('ID de consultorio inválido'),
 
+  // El rol lo fija el servidor (ODONTOLOGO). Aceptarlo del cliente permitiría
+  // crear administradores por esta ruta.
   body('id_rol')
-    .optional()
-    .isInt({ min: 1 }).withMessage('ID de rol inválido'),
+    .not().exists().withMessage('El rol no se puede asignar desde este formulario'),
 
   validar,
 ];

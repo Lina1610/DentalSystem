@@ -11,11 +11,28 @@ const guardsCrear = [
 
   body('fecha')
     .notEmpty().withMessage('La fecha es obligatoria')
-    .isISO8601().withMessage('Fecha inválida'),
+    .isISO8601().withMessage('Fecha inválida')
+    .custom((value) => {
+      const hoy = new Date().toLocaleDateString('sv-SE');
+      if (value < hoy) {
+        throw new Error('La fecha no puede ser anterior a hoy');
+      }
+      return true;
+    }),
 
   body('hora_inicio')
     .notEmpty().withMessage('La hora de inicio es obligatoria')
-    .matches(HORA_REGEX).withMessage('Hora de inicio inválida (HH:mm)'),
+    .matches(HORA_REGEX).withMessage('Hora de inicio inválida (HH:mm)')
+    .custom((value, { req }) => {
+      const hoy = new Date().toLocaleDateString('sv-SE');
+      if (req.body.fecha === hoy) {
+        const horaActual = new Date().toTimeString().slice(0, 5);
+        if (value <= horaActual) {
+          throw new Error('La hora de inicio ya pasó; elige un horario más adelante');
+        }
+      }
+      return true;
+    }),
 
   body('hora_fin')
     .notEmpty().withMessage('La hora de fin es obligatoria')

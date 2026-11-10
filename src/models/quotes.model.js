@@ -12,17 +12,27 @@ Cita.findAll = async ({
   estado = '',
   id_paciente = '',
   id_odontologo = '',
+  fecha = '',
 } = {}) => {
+  const filtrosBase = {
+    ...(id_paciente ? { 'cita.id_paciente': id_paciente } : {}),
+    ...(id_odontologo ? { 'cita.id_odontologo': id_odontologo } : {}),
+    ...(fecha ? { 'DATE(cita.fecha_inicio)': fecha } : {}),
+  };
+
   const { where, params } = buildWhere({
     filtros: {
       busqueda,
-      exactos: {
-        ...(estado ? { 'cita.estado': estado } : {}),
-        ...(id_paciente ? { 'cita.id_paciente': id_paciente } : {}),
-        ...(id_odontologo ? { 'cita.id_odontologo': id_odontologo } : {}),
-      },
+      exactos: { ...filtrosBase, ...(estado ? { 'cita.estado': estado } : {}) },
     },
-    searchableFields: ['pac.documento'],
+    searchableFields: ['pac.documento', 'pac.nombres', 'pac.apellidos'],
+  });
+
+  // Los contadores por estado ignoran el filtro de estado, para que las
+  // tarjetas de resumen muestren siempre el reparto completo
+  const { where: whereStats, params: paramsStats } = buildWhere({
+    filtros: { busqueda, exactos: filtrosBase },
+    searchableFields: ['pac.documento', 'pac.nombres', 'pac.apellidos'],
   });
 
   const [[stats]] = await pool.query(
@@ -34,9 +44,16 @@ Cita.findAll = async ({
        SUM(cita.estado = 'FINALIZADA')      AS finalizadas
      FROM cita
      JOIN paciente pac ON pac.id_paciente = cita.id_paciente
-     ${where}`,
-    params
+     ${whereStats}`,
+    paramsStats
   );
+
+  const porEstado = {
+    PENDIENTE: stats.pendientes,
+    CONFIRMADA: stats.confirmadas,
+    CANCELADA: stats.canceladas,
+    FINALIZADA: stats.finalizadas,
+  };
 
   const [data] = await pool.query(
     `SELECT
@@ -51,23 +68,27 @@ Cita.findAll = async ({
      JOIN usuario    usr ON usr.id_usuario    = odo.id_usuario
      JOIN servicio   srv ON srv.id_servicio   = cita.id_servicio
      ${where}
-     ORDER BY cita.id_cita ASC
+     ORDER BY
+       (cita.fecha_inicio >= CURDATE()) DESC,
+       CASE WHEN cita.fecha_inicio >= CURDATE() THEN cita.fecha_inicio END ASC,
+       cita.fecha_inicio DESC
      LIMIT ? OFFSET ?`,
     [...params, Number(limite), Number(offset)]
   );
 
   return {
     data,
-    total: Number(stats.total),
+    // total = registros que cumplen todos los filtros (para paginar)
+    total: Number(estado ? porEstado[estado] ?? 0 : stats.total),
+    totalGeneral: Number(stats.total),
     pendientes: Number(stats.pendientes),
     confirmadas: Number(stats.confirmadas),
     canceladas: Number(stats.canceladas),
     finalizadas: Number(stats.finalizadas),
   };
 };
-
-Cita.findById = async (id) => {
-  const [rows] = await pool.query(
+Cita.findById = async (id, db = pool) => {
+  const [rows] = await db.query(
     'SELECT * FROM cita WHERE id_cita = ?',
     [id]
   );
@@ -100,13 +121,14 @@ Cita.existeConflictoHorario = async (
   idOdontologo,
   fechaInicio,
   fechaFin,
-  excludeId = null
+  excludeId = null,
+  db = pool
 ) => {
   let query = `
     SELECT id_cita
     FROM cita
     WHERE id_odontologo = ?
-      AND estado IN ('PENDIENTE', 'CONFIRMADA')
+      AND estado IN ('PENDIENTE', 'CONFIRMADA', 'FINALIZADA')
       AND fecha_inicio < ?
       AND fecha_fin > ?
   `;
@@ -118,11 +140,24 @@ Cita.existeConflictoHorario = async (
     params.push(excludeId);
   }
 
-  const [rows] = await pool.query(query, params);
+  const [rows] = await db.query(query, params);
   return rows.length > 0;
 };
 
-Cita.create = async (data) => {
+Cita.findActivasPorAgenda = async (idAgenda, excludeId = null, db = pool) => {
+  let query = `SELECT id_cita FROM cita WHERE id_agenda = ? AND estado <> 'CANCELADA'`;
+  const params = [idAgenda];
+
+  if (excludeId != null) {
+    query += ' AND id_cita != ?';
+    params.push(excludeId);
+  }
+
+  const [rows] = await db.query(query, params);
+  return rows;
+};
+
+Cita.create = async (data, db = pool) => {
   const {
     id_paciente,
     id_odontologo,
@@ -135,7 +170,7 @@ Cita.create = async (data) => {
     observaciones,
   } = data;
 
-  const [result] = await pool.query(
+  const [result] = await db.query(
     `INSERT INTO cita
       (id_paciente, id_odontologo, id_servicio, id_agenda,
        fecha_inicio, fecha_fin, motivo_consulta, estado, observaciones)
@@ -153,10 +188,10 @@ Cita.create = async (data) => {
     ]
   );
 
-  return Cita.findById(result.insertId);
+  return Cita.findById(result.insertId, db);
 };
 
-Cita.update = async (id, data) => {
+Cita.update = async (id, data, db = pool) => {
   const CAMPOS_PERMITIDOS = [
     'id_paciente',
     'id_odontologo',
@@ -185,12 +220,12 @@ Cita.update = async (id, data) => {
  
   valores.push(id);
 
-  await pool.query(
+  await db.query(
     `UPDATE cita SET ${campos.join(', ')} WHERE id_cita = ?`,
     valores
   );
 
-  return Cita.findById(id);
+  return Cita.findById(id, db);
 };
 
 Cita.cancelar = async (id, observaciones = null) => {

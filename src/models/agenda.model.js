@@ -15,15 +15,22 @@ Agenda.findAll = async ({
   fecha = '',
   estado = '',
 } = {}) => {
+  const filtrosBase = {
+    ...(id_odontologo ? { 'agenda.id_odontologo': id_odontologo } : {}),
+    ...(fecha ? { 'agenda.fecha': fecha } : {}),
+  };
+
   const { where, params } = buildWhere({
     filtros: {
       busqueda,
-      exactos: {
-        ...(id_odontologo ? { 'agenda.id_odontologo': id_odontologo } : {}),
-        ...(fecha ? { 'agenda.fecha': fecha } : {}),
-        ...(estado ? { 'agenda.estado': estado } : {}),
-      },
+      exactos: { ...filtrosBase, ...(estado ? { 'agenda.estado': estado } : {}) },
     },
+    searchableFields: ['usr.nombres', 'usr.apellidos'],
+  });
+
+  // Los contadores ignoran el filtro de estado (reparto completo en las tarjetas)
+  const { where: whereStats, params: paramsStats } = buildWhere({
+    filtros: { busqueda, exactos: filtrosBase },
     searchableFields: ['usr.nombres', 'usr.apellidos'],
   });
 
@@ -37,9 +44,16 @@ Agenda.findAll = async ({
      FROM agenda
      JOIN odontologo odo ON odo.id_odontologo = agenda.id_odontologo
      JOIN usuario    usr ON usr.id_usuario    = odo.id_usuario
-     ${where}`,
-    params
+     ${whereStats}`,
+    paramsStats
   );
+
+  const porEstado = {
+    DISPONIBLE: stats.disponibles,
+    OCUPADO: stats.ocupados,
+    BLOQUEADO: stats.bloqueados,
+    NO_DISPONIBLE: stats.no_disponibles,
+  };
 
   const [data] = await pool.query(
     `SELECT
@@ -56,16 +70,22 @@ Agenda.findAll = async ({
 
   return {
     data,
-    total:          Number(stats.total),
-    disponibles:    Number(stats.disponibles),
+    // total = registros que cumplen todos los filtros (para paginar)
+    total:          Number(estado ? porEstado[estado] ?? 0 : stats.total),
+    totalGeneral:   Number(stats.total),
+    disponibles:   Number(stats.disponibles),
     ocupados:       Number(stats.ocupados),
     bloqueados:     Number(stats.bloqueados),
     no_disponibles: Number(stats.no_disponibles),
   };
 };
 
+// Horarios que se pueden agendar: DISPONIBLE y que todavía no han empezado
 Agenda.findDisponibles = async ({ id_odontologo = '', fecha = '' } = {}) => {
-  const condiciones = [`agenda.estado = 'DISPONIBLE'`];
+  const condiciones = [
+    `agenda.estado = 'DISPONIBLE'`,
+    `TIMESTAMP(agenda.fecha, agenda.hora_inicio) >= NOW()`,
+  ];
   const params = [];
 
   if (id_odontologo) {
@@ -98,6 +118,42 @@ Agenda.findById = async (id) => {
     [id]
   );
   return rows[0] ?? null;
+};
+
+// Lee el horario bloqueando la fila hasta el fin de la transacción, para que dos
+// citas no puedan reservar el mismo bloque al mismo tiempo. Requiere una conexión en transacción.
+// `cubre_rango` indica si [fechaInicio, fechaFin] cae dentro del bloque (fecha + horas).
+// `ya_paso` indica si el horario ya empezó (según el reloj de MySQL).
+Agenda.findByIdParaReservar = async (id, fechaInicio, fechaFin, conn) => {
+  const [rows] = await conn.query(
+    `SELECT
+       agenda.*,
+       (CAST(? AS DATETIME) >= TIMESTAMP(agenda.fecha, agenda.hora_inicio)
+        AND CAST(? AS DATETIME) <= TIMESTAMP(agenda.fecha, agenda.hora_fin)) AS cubre_rango,
+       (TIMESTAMP(agenda.fecha, agenda.hora_inicio) < NOW()) AS ya_paso
+     FROM agenda
+     WHERE id_agenda = ?
+     FOR UPDATE`,
+    [fechaInicio, fechaFin, id]
+  );
+  return rows[0] ?? null;
+};
+
+// true si fecha + hora ya pasaron según el reloj de MySQL (el mismo que usan citas y dashboard)
+Agenda.yaPaso = async (fecha, hora) => {
+  const [[row]] = await pool.query(
+    'SELECT TIMESTAMP(DATE(?), ?) < NOW() AS ya_paso',
+    [fecha, hora]
+  );
+  return Boolean(Number(row.ya_paso));
+};
+
+// Pasa a DISPONIBLE solo si estaba OCUPADO (no pisa un BLOQUEADO / NO_DISPONIBLE)
+Agenda.liberar = async (id, db = pool) => {
+  await db.query(
+    `UPDATE agenda SET estado = 'DISPONIBLE' WHERE id_agenda = ? AND estado = 'OCUPADO'`,
+    [id]
+  );
 };
 
 Agenda.existeSolapamiento = async (idOdontologo, fecha, horaInicio, horaFin, excludeId = null) => {
@@ -169,17 +225,18 @@ Agenda.update = async (id, data) => {
   return Agenda.findById(id);
 };
 
-Agenda.cambiarEstado = async (id, estado) => {
+Agenda.cambiarEstado = async (id, estado, db = pool) => {
   if (!ESTADOS_VALIDOS.includes(estado)) {
     throw new Error('Estado de agenda inválido');
   }
 
-  await pool.query(
+  await db.query(
     `UPDATE agenda SET estado = ? WHERE id_agenda = ?`,
     [estado, id]
   );
 
-  return Agenda.findById(id);
+  const [rows] = await db.query('SELECT * FROM agenda WHERE id_agenda = ?', [id]);
+  return rows[0] ?? null;
 };
 
 module.exports = Agenda;

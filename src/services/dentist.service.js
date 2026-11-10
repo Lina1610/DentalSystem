@@ -1,13 +1,41 @@
 const Dentista = require("../models/dentist.model");
-const { NotFoundError, ConflictError } = require("../helpers/errors");
+const { NotFoundError, ConflictError, ValidationError } = require("../helpers/errors");
+const { hashPassword, problemasDePolitica } = require("../helpers/password");
+const { ROLES } = require("../middlewares/roles.middleware");
 
 const crearDentista = async (data) => {
-  const duplicado = await Dentista.existeDuplicado(data.documento, data.email);
-  if (duplicado) {
-    throw new ConflictError("Ya existe un dentista con ese documento o email");
+  // Defensa en profundidad: el guard ya valida, pero el servicio no confía en que
+  // siempre lo llamen a través de esa ruta.
+  const problemas = problemasDePolitica(data.password, data);
+  if (problemas.length > 0) {
+    throw new ValidationError(problemas.join(". "));
   }
 
-  return Dentista.create(data);
+  const duplicado = await Dentista.existeDuplicado({
+    documento: data.documento,
+    email: data.email,
+    username: data.username,
+  });
+  if (duplicado) {
+    throw new ConflictError("Ya existe un usuario con ese documento, email o nombre de usuario");
+  }
+
+  const passwordHash = await hashPassword(data.password);
+
+  return Dentista.create({
+    id_rol: ROLES.ODONTOLOGO,
+    nombres: data.nombres,
+    apellidos: data.apellidos,
+    documento: data.documento,
+    telefono: data.telefono,
+    email: data.email,
+    username: data.username,
+    password_hash: passwordHash,
+    id_especialidad: data.id_especialidad,
+    id_consultorio: data.id_consultorio,
+    tarjeta_profesional: data.tarjeta_profesional,
+    experiencia_anios: data.experiencia_anios,
+  });
 };
 const obtenerDentistas = async ({
   pagina = 1,
@@ -31,11 +59,11 @@ const actualizarDentista = async (id, data) => {
   await obtenerDentistaPorId(id);
 
   if (data.documento || data.email) {
-    const duplicado = await Dentista.existeDuplicado(
-      data.documento,
-      data.email,
-      id,
-    );
+    const duplicado = await Dentista.existeDuplicado({
+      documento: data.documento,
+      email: data.email,
+      excludeIdOdontologo: id,
+    });
     if (duplicado) {
       throw new ConflictError(
         "El documento o email ya está en uso por otro dentista",

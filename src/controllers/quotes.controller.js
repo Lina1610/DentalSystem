@@ -17,8 +17,9 @@ const obtenerTodos = async (req, res, next) => {
     const estado        = (req.query.estado        ?? '').toString().trim();
     const id_paciente   = (req.query.id_paciente   ?? '').toString().trim();
     const id_odontologo = (req.query.id_odontologo ?? '').toString().trim();
+    const fecha         = (req.query.fecha         ?? '').toString().trim();
 
-    const resultado = await quotesService.obtenerQuotes({ pagina, limite, busqueda, estado, id_paciente, id_odontologo });
+    const resultado = await quotesService.obtenerQuotes({ pagina, limite, busqueda, estado, id_paciente, id_odontologo, fecha });
     res.json(resultado);
   } catch (error) {
     next(error);

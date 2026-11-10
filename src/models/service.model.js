@@ -19,14 +19,20 @@ Service.findAll = async ({
     searchableFields: ['nombre'],
   });
 
+  // Los contadores ignoran el filtro de estado (reparto completo en las tarjetas)
+  const { where: whereStats, params: paramsStats } = buildWhere({
+    filtros: { busqueda },
+    searchableFields: ['nombre'],
+  });
+
   const [[stats]] = await pool.query(
     `SELECT
        COUNT(*)                  AS total,
        SUM(estado = 'ACTIVO')    AS activos,
        SUM(estado = 'INACTIVO')  AS inactivos
      FROM servicio
-     ${where}`,
-    params
+     ${whereStats}`,
+    paramsStats
   );
 
   // Datos paginados
@@ -39,9 +45,13 @@ Service.findAll = async ({
     [...params, Number(limite), Number(offset)]
   );
 
+  const porEstado = { ACTIVO: stats.activos, INACTIVO: stats.inactivos };
+
   return {
     data,
-    total:    Number(stats.total),
+    // total = registros que cumplen todos los filtros (para paginar)
+    total:    Number(estado ? porEstado[estado] ?? 0 : stats.total),
+    totalGeneral: Number(stats.total),
     activos:  Number(stats.activos),
     inactivos: Number(stats.inactivos),
   };

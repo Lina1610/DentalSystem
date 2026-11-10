@@ -27,6 +27,12 @@ router.get(
   serviceController.obtenerPorNombre
 );
 
+router.get(
+  '/:id',
+  guardsId,
+  serviceController.obtenerPorId
+);
+
 router.put(
   '/:id',
   guardsActualizar,

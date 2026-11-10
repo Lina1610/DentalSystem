@@ -24,4 +24,12 @@ class ValidationError extends Error {
   }
 }
 
-module.exports = { NotFoundError, ConflictError, ValidationError };
+class UnauthorizedError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'UnauthorizedError';
+    this.statusCode = 401;
+  }
+}
+
+module.exports = { NotFoundError, ConflictError, ValidationError, UnauthorizedError };

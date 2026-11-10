@@ -38,6 +38,15 @@ const obtenerPorNombre = async (req, res, next) => {
   }
 };
 
+const obtenerPorId = async (req, res, next) => {
+  try {
+    const serviceResult = await service.obtenerServicePorId(req.params.id);
+    res.json(serviceResult);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const actualizar = async (req, res, next) => {
   try {
     const serviceResult = await service.actualizarService(
@@ -71,6 +80,7 @@ module.exports = {
   crear,
   obtenerTodos,
   obtenerPorNombre,
+  obtenerPorId,
   actualizar,
   eliminar,
   cambiarEstado,

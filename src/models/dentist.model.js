@@ -6,7 +6,6 @@ const { ValidationError } = require("../helpers/errors");
 
 const Dentista = {};
 
-// Constante reutilizable para evitar duplicación de texto
 const SELECT_DETALLE = `
   SELECT
     o.id_odontologo, o.tarjeta_profesional, o.experiencia_anios, o.estado, o.fecha_creacion,
@@ -37,7 +36,11 @@ Dentista.findAll = async ({
     INNER JOIN especialidad e ON e.id_especialidad = o.id_especialidad
     INNER JOIN consultorio  c ON c.id_consultorio  = o.id_consultorio`;
 
-  // COALESCE asegura que devuelva 0 en lugar de NULL si no hay filas
+  const { where: whereStats, params: paramsStats } = buildWhere({
+    filtros: { busqueda },
+    searchableFields: ['u.nombres', 'u.apellidos', 'u.documento'],
+  });
+
   const [[stats]] = await pool.query(
     `SELECT
        COUNT(*)                             AS total,
@@ -45,9 +48,11 @@ Dentista.findAll = async ({
        COALESCE(SUM(o.estado = 'INACTIVO'), 0) AS inactivos
      FROM odontologo o
      ${JOINS}
-     ${where}`,
-    params,
+     ${whereStats}`,
+    paramsStats,
   );
+
+  const porEstado = { ACTIVO: stats.activos, INACTIVO: stats.inactivos };
 
   const [data] = await pool.query(
     `${SELECT_DETALLE}
@@ -59,13 +64,13 @@ Dentista.findAll = async ({
 
   return {
     data,
-    total: Number(stats.total),
+    total: Number(estado ? porEstado[estado] ?? 0 : stats.total),
+    totalGeneral: Number(stats.total),
     activos: Number(stats.activos),
     inactivos: Number(stats.inactivos),
   };
 };
 
-// Permite pasar una conexión específica (para transacciones) o usar el pool por defecto
 Dentista.findById = async (id, connection = pool) => {
   const [rows] = await connection.query(
     `${SELECT_DETALLE} WHERE o.id_odontologo = ?`,
@@ -95,7 +100,36 @@ Dentista.findByEmail = async (email) => {
   return rows[0] ?? null;
 };
 
+Dentista.existeDuplicado = async ({ documento, email, username, excludeIdOdontologo = null } = {}) => {
+  const condiciones = [];
+  const params = [];
+
+  if (documento) { condiciones.push('u.documento = ?'); params.push(documento); }
+  if (email)     { condiciones.push('u.email = ?');     params.push(email); }
+  if (username)  { condiciones.push('u.username = ?');  params.push(username); }
+
+  if (condiciones.length === 0) return false;
+
+  let query = `
+    SELECT u.id_usuario
+    FROM usuario u
+    LEFT JOIN odontologo o ON o.id_usuario = u.id_usuario
+    WHERE (${condiciones.join(' OR ')})`;
+
+  if (excludeIdOdontologo != null) {
+    query += ' AND NOT (o.id_odontologo <=> ?)';
+    params.push(excludeIdOdontologo);
+  }
+
+  const [rows] = await pool.query(`${query} LIMIT 1`, params);
+  return rows.length > 0;
+};
+
 Dentista.create = async (data) => {
+  if (!/^\$2[aby]\$\d{2}\$.{53}$/.test(data.password_hash ?? '')) {
+    throw new Error('Dentista.create requiere password_hash con formato bcrypt');
+  }
+
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
@@ -105,7 +139,7 @@ Dentista.create = async (data) => {
          (id_rol, nombres, apellidos, documento, telefono, email, username, password_hash)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        data.id_rol ?? 2,
+        data.id_rol,
         data.nombres,
         data.apellidos,
         data.documento,
@@ -130,7 +164,6 @@ Dentista.create = async (data) => {
     );
 
     await conn.commit();
-    // Reutilizamos la misma conexión antes de liberarla
     return await Dentista.findById(odonResult.insertId, conn);
   } catch (err) {
     await conn.rollback();

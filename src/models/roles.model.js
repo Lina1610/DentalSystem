@@ -7,14 +7,4 @@ Role.findAll = async () => {
   return rows;
 };
 
-Role.findByEmail = async (correo) => {
-
-  const [rows] = await pool.query(
-    'SELECT * FROM usuario WHERE correo = ?',
-    [correo]
-  );
-
-  return rows[0];
-};
-
 module.exports = Role;

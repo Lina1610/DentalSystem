@@ -3,7 +3,7 @@ const { getRoles } = require('../controllers/roles.controller');
 
 const router = Router();
 
-router.get('/roles', getRoles);
+router.get('/', getRoles);
 
 module.exports = router;
  
